@@ -90,16 +90,42 @@ const pick=(o,keys,def="")=>{for(const k of keys){let v=o?.[k];if(v!==undefined&
 const arr=o=>Array.isArray(o)?o:(o?.data&&Array.isArray(o.data)?o.data:o?.matches||o?.results||o?.response||[]);
 
 function arr(o){
- if(Array.isArray(o)) return o;
- if(!o || typeof o!=="object") return [];
- for(const k of ["data","matches","results","response","fixtures","schedule"]){
-   if(Array.isArray(o[k])) return o[k];
-   if(o[k] && typeof o[k]==="object"){
-     const nested=arr(o[k]);
-     if(nested.length) return nested;
+ // CricLive may wrap matches at different nesting levels depending on endpoint/version.
+ // First check common containers, then recursively search for the first array that
+ // actually looks like a match list.
+ const looksLikeMatch=(x)=>{
+   if(!x || typeof x!=="object" || Array.isArray(x)) return false;
+   return ["match_id","matchId","id","match_desc","match_name","first_team",
+           "second_team","home_team","away_team","status","match_status",
+           "state"].some(k=>k in x);
+ };
+ const walk=(v,depth=0)=>{
+   if(depth>7 || v==null) return [];
+   if(Array.isArray(v)){
+     if(v.some(looksLikeMatch)) return v;
+     for(const item of v){
+       const r=walk(item,depth+1);
+       if(r.length) return r;
+     }
+     return [];
    }
- }
- return [];
+   if(typeof v!=="object") return [];
+   const preferred=["data","matches","results","response","fixtures","schedule",
+                    "match_list","matchList","items","records","events"];
+   for(const k of preferred){
+     if(k in v){
+       const r=walk(v[k],depth+1);
+       if(r.length) return r;
+     }
+   }
+   for(const k of Object.keys(v)){
+     if(preferred.includes(k)) continue;
+     const r=walk(v[k],depth+1);
+     if(r.length) return r;
+   }
+   return [];
+ };
+ return walk(o);
 }
 
 function normalize(raw){
