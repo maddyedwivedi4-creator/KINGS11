@@ -89,23 +89,38 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 const pick=(o,keys,def="")=>{for(const k of keys){let v=o?.[k];if(v!==undefined&&v!==null&&v!=="")return v}return def};
 const arr=o=>Array.isArray(o)?o:(o?.data&&Array.isArray(o.data)?o.data:o?.matches||o?.results||o?.response||[]);
 
+function arr(o){
+ if(Array.isArray(o)) return o;
+ if(!o || typeof o!=="object") return [];
+ for(const k of ["data","matches","results","response","fixtures","schedule"]){
+   if(Array.isArray(o[k])) return o[k];
+   if(o[k] && typeof o[k]==="object"){
+     const nested=arr(o[k]);
+     if(nested.length) return nested;
+   }
+ }
+ return [];
+}
+
 function normalize(raw){
  const a=arr(raw);
  return a.map((m,i)=>{
-   const home=m.home_team||m.homeTeam||m.team1||m.home||m.teams?.home||{};
-   const away=m.away_team||m.awayTeam||m.team2||m.away||m.teams?.away||{};
-   const hs=m.home_score||m.homeScore||m.score?.home||m.scores?.home||{};
-   const as=m.away_score||m.awayScore||m.score?.away||m.scores?.away||{};
+   const home=m.first_team||m.home_team||m.homeTeam||m.team1||m.home||m.teams?.home||{};
+   const away=m.second_team||m.away_team||m.awayTeam||m.team2||m.away||m.teams?.away||{};
+   const hs=m.home_score||m.homeScore||m.first_team?.score||m.score?.home||m.scores?.home||{};
+   const as=m.away_score||m.awayScore||m.second_team?.score||m.score?.away||m.scores?.away||{};
+   const teamName=(t,fallback)=>typeof t==="string"?t:pick(t,["full_name","name","team_name","title"],fallback);
+   const teamLogo=(t,fallback="")=>typeof t==="object"?pick(t,["logo","logo_url","image","team_logo"],fallback):fallback;
    return {
     raw:m,
     id:pick(m,["match_id","matchId","id"],i),
     title:pick(m,["match_desc","match_name","title","name"],"Cricket Match"),
     series:pick(m,["series_name","series","tournament"],""),
     status:pick(m,["state","status","match_status"],""),
-    start:pick(m,["start_time","startTime","date_start","date","scheduled_at"],""),
+    start:pick(m,["start_time","startTime","start_datetime","start_date","date_start","match_date","date","scheduled_at","scheduled_time"],""),
     venue:pick(m,["venue","venue_name","ground"],""),
-    home:{name:pick(home,["name","team_name","title"],pick(m,["home_team_name","team1_name"],"Team 1")),logo:pick(home,["logo","logo_url","image","team_logo"],pick(m,["home_logo","team1_logo"],""))},
-    away:{name:pick(away,["name","team_name","title"],pick(m,["away_team_name","team2_name"],"Team 2")),logo:pick(away,["logo","logo_url","image","team_logo"],pick(m,["away_logo","team2_logo"],""))},
+    home:{name:teamName(home,pick(m,["home_team_name","team1_name"],"Team 1")),logo:teamLogo(home,pick(m,["home_logo","team1_logo"],""))},
+    away:{name:teamName(away,pick(m,["away_team_name","team2_name"],"Team 2")),logo:teamLogo(away,pick(m,["away_logo","team2_logo"],""))},
     homeScore:scoreText(hs,m,"home"),awayScore:scoreText(as,m,"away")
    };
  });
@@ -130,7 +145,8 @@ function isCompleted(m){
 }
 function isFuture(m){
  const s=String(m.status).toLowerCase();
- return s.includes("preview")||s.includes("scheduled")||s.includes("upcoming")||s.includes("not started")||s.includes("fixture")||(!isLive(m)&&!isCompleted(m));
+ if(isLive(m)||isCompleted(m)) return false;
+ return s.includes("preview")||s.includes("scheduled")||s.includes("upcoming")||s.includes("not started")||s.includes("fixture")||s.includes("yet to start")||(!isLive(m)&&!isCompleted(m));
 }
 function logo(url,name){
  return url?`<img src="${esc(url)}" alt="" onerror="this.style.display='none'">`:`<div style="width:36px;height:36px;border-radius:50%;background:#172941;display:grid;place-items:center;font-size:18px">🏏</div>`;
@@ -171,16 +187,37 @@ async function fetchJSON(path){
  return j;
 }
 
+function mergeUnique(list){
+ const seen=new Set();
+ return list.filter(m=>{
+   const key=String(m.id);
+   if(seen.has(key)) return false;
+   seen.add(key);
+   return true;
+ });
+}
+
 async function load(){
  $("status").textContent="Updating real cricket data from CricLive…";
  try{
-   const liveRaw=await fetchJSON("/api/cricket/live");
+   const [liveRaw,scheduleRaw]=await Promise.all([
+     fetchJSON("/api/cricket/live"),
+     fetchJSON("/api/cricket/schedule")
+   ]);
+
    const liveAll=normalize(liveRaw);
-   cache.LIVE=liveAll.filter(isLive);
-   const scheduleRaw=await fetchJSON("/api/cricket/schedule");
    const schedule=normalize(scheduleRaw);
-   cache.UPCOMING=schedule.filter(m=>!isLive(m)&&!isCompleted(m));
-   cache.COMPLETED=schedule.filter(isCompleted);
+
+   // /live can contain both actual LIVE matches and PREVIEW/future matches.
+   // /schedule is used as the main upcoming/completed source.
+   cache.LIVE=liveAll.filter(isLive);
+
+   const futureFromLive=liveAll.filter(isFuture);
+   const futureFromSchedule=schedule.filter(isFuture);
+   cache.UPCOMING=mergeUnique([...futureFromLive,...futureFromSchedule]);
+
+   cache.COMPLETED=mergeUnique(schedule.filter(isCompleted));
+
    $("status").textContent=`CricLive connected • ${cache.LIVE.length} live • ${cache.UPCOMING.length} upcoming`;
    $("lastUpdated").textContent=new Date().toLocaleTimeString("en-IN");
    render();
