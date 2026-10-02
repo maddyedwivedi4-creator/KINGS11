@@ -206,11 +206,23 @@ function render(){
  $("matches").innerHTML=list.map(card).join("");
 }
 
-async function fetchJSON(path){
- const r=await fetch(API+path,{cache:"no-store"});
- const j=await r.json();
- if(!r.ok||j.success===false)throw new Error(j.error||j.message||("HTTP "+r.status));
- return j;
+async function fetchJSON(path, timeoutMs=12000){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),timeoutMs);
+ try{
+   const r=await fetch(API+path,{cache:"no-store",signal:controller.signal});
+   const text=await r.text();
+   let j;
+   try{ j=JSON.parse(text); }
+   catch(_){ throw new Error("Worker returned non-JSON response (HTTP "+r.status+")"); }
+   if(!r.ok||j.success===false)throw new Error(j.error||j.message||("HTTP "+r.status));
+   return j;
+ }catch(e){
+   if(e.name==="AbortError") throw new Error("Request timed out after "+Math.round(timeoutMs/1000)+"s: "+path);
+   throw e;
+ }finally{
+   clearTimeout(timer);
+ }
 }
 
 function mergeUnique(list){
@@ -224,35 +236,41 @@ function mergeUnique(list){
 }
 
 async function load(){
- $("status").textContent="Updating real cricket data from CricLive…";
+ $("status").textContent="Connecting to KINGS11 cricket server…";
+ $("matches").innerHTML=`<div class="empty">Loading cricket data…</div>`;
+
+ // Load LIVE independently. A slow schedule endpoint must never block LIVE.
  try{
-   const [liveRaw,scheduleRaw]=await Promise.all([
-     fetchJSON("/api/cricket/live"),
-     fetchJSON("/api/cricket/schedule")
-   ]);
-
+   const liveRaw=await fetchJSON("/api/cricket/live",12000);
    const liveAll=normalize(liveRaw);
-   const schedule=normalize(scheduleRaw);
-
-   // /live can contain both actual LIVE matches and PREVIEW/future matches.
-   // /schedule is used as the main upcoming/completed source.
    cache.LIVE=liveAll.filter(isLive);
-
-   const futureFromLive=liveAll.filter(isFuture);
-   const futureFromSchedule=schedule.filter(isFuture);
-   cache.UPCOMING=mergeUnique([...futureFromLive,...futureFromSchedule]);
-
-   cache.COMPLETED=mergeUnique(schedule.filter(isCompleted));
-
+   // Preview/future matches returned by /live can be used immediately.
+   cache.UPCOMING=mergeUnique(liveAll.filter(isFuture));
    $("status").textContent=`CricLive connected • ${cache.LIVE.length} live • ${cache.UPCOMING.length} upcoming`;
    $("lastUpdated").textContent=new Date().toLocaleTimeString("en-IN");
    render();
  }catch(e){
-   $("status").textContent="Cricket server connection error: "+e.message;
-   $("matches").innerHTML=`<div class="empty">Data could not be loaded. Check the KINGS11 Worker.</div>`;
+   $("status").textContent="LIVE connection error: "+e.message;
+   $("matches").innerHTML=`<div class="empty">Live data could not be loaded.<br><small>${e.message}</small></div>`;
+ }
+
+ // Load schedule separately. If this endpoint is slow/fails, the page remains usable.
+ try{
+   $("status").textContent += " • Loading schedule…";
+   const scheduleRaw=await fetchJSON("/api/cricket/schedule",12000);
+   const schedule=normalize(scheduleRaw);
+   const futureFromSchedule=schedule.filter(isFuture);
+   cache.UPCOMING=mergeUnique([...cache.UPCOMING,...futureFromSchedule]);
+   cache.COMPLETED=mergeUnique(schedule.filter(isCompleted));
+   $("status").textContent=`CricLive connected • ${cache.LIVE.length} live • ${cache.UPCOMING.length} upcoming`;
+   $("lastUpdated").textContent=new Date().toLocaleTimeString("en-IN");
+   render();
+ }catch(e){
+   $("status").textContent=`CricLive connected • ${cache.LIVE.length} live • ${cache.UPCOMING.length} upcoming • Schedule unavailable`;
+   // Keep any preview matches already obtained from /live.
+   render();
  }
 }
-
 function findMatch(id){
  return [...cache.LIVE,...cache.UPCOMING,...cache.COMPLETED].find(m=>String(m.id)===String(id));
 }
@@ -284,6 +302,7 @@ function selectCredit(el){document.querySelectorAll(".credit").forEach(x=>x.clas
 
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");currentTab=b.dataset.tab;render()}));
 $("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+render();
 load();
 setInterval(load,60000);
 </script>
