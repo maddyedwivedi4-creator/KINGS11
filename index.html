@@ -567,10 +567,28 @@ async function loadLiveOnly(){
    const liveRaw=await fetchCricketPath("/api/cricket/live");
    const liveAll=normalize(liveRaw);
    cache.LIVE=unique(liveAll.filter(live));
+   localStorage.setItem("kings11_last_live", JSON.stringify({ts:Date.now(), data:liveRaw}));
    liveLoaded=true;
    updateStatus();
    render();
  }catch(e){
+   // NEVER retry automatically on 429. Use the last successful response instead.
+   if(String(e.message||"").includes("HTTP 429")){
+     try{
+       const saved=JSON.parse(localStorage.getItem("kings11_last_live")||"null");
+       if(saved?.data){
+         const liveAll=normalize(saved.data);
+         cache.LIVE=unique(liveAll.filter(live));
+         liveLoaded=true;
+         $("status").textContent="CricLive quota busy (HTTP 429) • last saved LIVE data";
+         render();
+         return;
+       }
+     }catch(_){}
+     $("status").textContent="CricLive quota busy (HTTP 429) • no new request will be retried";
+     $("matches").innerHTML='<div class="card"><h3>API quota temporarily busy</h3><div class="small">CricLive ne HTTP 429 diya hai. KINGS11 automatic retry nahi karega, taaki aur API hits waste na hon.</div></div>';
+     return;
+   }
    $("status").textContent="KINGS11 — LIVE request failed";
    $("matches").innerHTML=`<div class="card"><h3>Exact problem</h3><div class="small">${esc(e.message||String(e))}</div></div>`;
  }
@@ -585,6 +603,7 @@ async function loadScheduleOnly(){
    $("matches").innerHTML='<div class="small">Loading UPCOMING / COMPLETED matches…</div>';
    try{
      const scheduleRaw=await fetchCricketPath("/api/cricket/schedule");
+     localStorage.setItem("kings11_last_schedule", JSON.stringify({ts:Date.now(), data:scheduleRaw}));
      const schedule=normalize(scheduleRaw);
      const list=unique(schedule);
 
@@ -596,6 +615,23 @@ async function loadScheduleOnly(){
      updateStatus();
      render();
    }catch(e){
+     if(String(e.message||"").includes("HTTP 429")){
+       try{
+         const saved=JSON.parse(localStorage.getItem("kings11_last_schedule")||"null");
+         if(saved?.data){
+           const schedule=normalize(saved.data);
+           cache.UPCOMING=unique(schedule.filter(future));
+           cache.COMPLETED=unique(schedule.filter(done));
+           scheduleLoaded=true;
+           $("status").textContent="CricLive quota busy (HTTP 429) • last saved schedule";
+           render();
+           return;
+         }
+       }catch(_){}
+       $("status").textContent="CricLive quota busy (HTTP 429) • no retry";
+       $("matches").innerHTML='<div class="card"><h3>API quota temporarily busy</h3><div class="small">Automatic retry band hai. Quota available hone par hi fresh data request ki jayegi.</div></div>';
+       return;
+     }
      $("status").textContent="KINGS11 — schedule request failed";
      $("matches").innerHTML=`<div class="card"><h3>Exact problem</h3><div class="small">${esc(e.message||String(e))}</div></div>`;
    }finally{
