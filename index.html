@@ -492,86 +492,126 @@ function render(){
    <div class="team"><div class="team-left">${logo(m.home.logo)}<div class="team-name">${esc(m.home.name)}</div></div><div class="score">${esc(scoreText(m,'home'))}</div></div>
    <div class="team"><div class="team-left">${logo(m.away.logo)}<div class="team-name">${esc(m.away.name)}</div></div><div class="score">${esc(scoreText(m,'away'))}</div></div>
    <div class="meta">${esc(m.title)} • ${esc(fmt(m.start))}${m.venue?" • "+esc(m.venue):""}</div>
-   ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score loading…')}</div>`:''}
+   ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score not included in LIVE feed')}</div>`:''}
   </div>
   <div class="valuebar"><div><div class="value-label">KINGS11 VIRTUAL BHAV / GAME VALUE</div><div class="small">Match state ke saath update hota hai • cash value nahi</div></div><div class="value">${val(m)}</div></div>
   <div class="actions"><button class="btn join" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN • 500 VC</button><button class="btn details" onclick="details('${encodeURIComponent(String(m.id))}')">MATCH DETAILS</button></div>
  </article>`).join(""):`<div class="small" style="padding:40px;text-align:center">No ${currentTab.toLowerCase()} matches available.</div>`;
- if(currentTab==='LIVE') list.forEach(m=>hydrateLiveCard(m));
-}
-async function hydrateLiveCard(m){
-  try{
-    const d=await getJSON(`/api/cricket/match/${encodeURIComponent(String(m.id))}/scorecard`);
-    const data=cleanData(d);
-    const matchData=data?.match||data;
-    const score=pick(matchData,['score','live_score','current_score','score_text'],'');
-    const crr=pick(data,['crr','current_run_rate'],'');
-    const rrr=pick(data,['rrr','required_run_rate'],'');
-    const overs=pick(data,['overs','current_overs'],'');
-    const line=[score,overs?`Overs: ${overs}`:'',crr?`CRR: ${crr}`:'',rrr?`RRR: ${rrr}`:''].filter(Boolean).join(' • ');
-    const el=$("scoreline-"+String(m.id)); if(el) el.textContent=line||'Live score data unavailable';
-  }catch(e){ const el=$("scoreline-"+String(m.id)); if(el) el.textContent='Live score data unavailable'; }
-}
-async function loadMatches(){
- const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),10000);
- $("status").textContent="Cricket data loading…";
- $("matches").innerHTML='<div class="small">Connecting to LIVE + SCHEDULE…</div>';
+ // Home screen intentionally makes no scorecard/commentary API calls.
 
+}
+function hydrateLiveCard(m){ /* disabled: prevents automatic API hits */ }
+async function fetchCricketPath(path){
+ const r=await fetch(CRICKET_API+path,{method:"GET",mode:"cors",cache:"no-store",headers:{Accept:"application/json"}});
+ const text=await r.text();
+ if(!r.ok) throw Error(`${path}: HTTP ${r.status}`);
+ let j; try{j=JSON.parse(text)}catch{throw Error(`${path}: Worker response JSON nahi hai`)}
+ if(j?.success===false) throw Error(`${path}: ${j.error||j.message||"success:false"}`);
+ return j;
+}
+
+let liveLoaded=false, scheduleLoaded=false, scheduleLoading=null;
+
+function updateStatus(){
+ $("status").textContent=
+   `CricLive • ${cache.LIVE.length} LIVE • ${cache.UPCOMING.length} UPCOMING • ${cache.COMPLETED.length} FINISHED`;
+ $("lastUpdated").textContent="Updated "+new Date().toLocaleTimeString("en-IN");
+}
+
+async function loadLiveOnly(){
+ if(liveLoaded) return;
+ $("status").textContent="CricLive • LIVE data loading…";
+ $("matches").innerHTML='<div class="small">Loading LIVE matches…</div>';
  try{
-   const fetchOne=async(path)=>{
-     const r=await fetch(CRICKET_API+path,{method:"GET",mode:"cors",cache:"no-store",signal:controller.signal,headers:{Accept:"application/json"}});
-     const text=await r.text();
-     if(!r.ok) throw Error(`${path}: HTTP ${r.status}`);
-     let j;
-     try{j=JSON.parse(text)}catch{throw Error(`${path}: Worker response JSON nahi hai`)}
-     if(j?.success===false) throw Error(`${path}: ${j.error||j.message||"success:false"}`);
-     return j;
-   };
-
-   const [lr,sr]=await Promise.allSettled([
-     fetchOne("/api/cricket/live"),
-     fetchOne("/api/cricket/schedule")
-   ]);
-
-   if(lr.status==="rejected" && sr.status==="rejected"){
-     const a=lr.reason?.message||"LIVE failed", b=sr.reason?.message||"SCHEDULE failed";
-     throw Error(a+" | "+b);
-   }
-
-   const liveRaw=lr.status==="fulfilled"?lr.value:null;
-   const scheduleRaw=sr.status==="fulfilled"?sr.value:null;
-
-   const liveAll=liveRaw?normalize(liveRaw):[];
-   const schedule=scheduleRaw?normalize(scheduleRaw):[];
-   const all=unique([...liveAll,...schedule]);
-
-   cache.LIVE=all.filter(live);
-   cache.UPCOMING=all.filter(future);
-   cache.COMPLETED=all.filter(done);
-
-   const failed=[];
-   if(lr.status==="rejected")failed.push("LIVE failed: "+lr.reason.message);
-   if(sr.status==="rejected")failed.push("SCHEDULE failed: "+sr.reason.message);
-
-   $("status").textContent=
-     `CricLive • ${cache.LIVE.length} LIVE • ${cache.UPCOMING.length} UPCOMING • ${cache.COMPLETED.length} FINISHED`+
-     (failed.length?" • "+failed.join(" | "):"");
-
-   $("lastUpdated").textContent="Updated "+new Date().toLocaleTimeString("en-IN");
-
-   if(!all.length){
-     $("matches").innerHTML=`<div class="card"><h3>Worker response received, but matches not detected</h3><details open><summary>Diagnostic response</summary><pre>${esc(JSON.stringify({live:liveRaw,schedule:scheduleRaw},null,2).slice(0,12000))}</pre></details></div>`;
-   }else{
-     render();
-   }
+   const liveRaw=await fetchCricketPath("/api/cricket/live");
+   const liveAll=normalize(liveRaw);
+   cache.LIVE=unique(liveAll.filter(live));
+   liveLoaded=true;
+   updateStatus();
+   render();
  }catch(e){
-   $("status").textContent="KINGS11 diagnostic — data request failed";
-   $("matches").innerHTML=`<div class="card"><h3>Exact problem</h3><div class="small">${esc(e.message||String(e))}</div><div class="small" style="margin-top:10px">Loading ab permanently nahi rukega. Is message se pata chalega ki browser fetch/CORS issue hai ya response parsing issue.</div></div>`;
- }finally{
-   clearTimeout(timer);
+   $("status").textContent="KINGS11 — LIVE request failed";
+   $("matches").innerHTML=`<div class="card"><h3>Exact problem</h3><div class="small">${esc(e.message||String(e))}</div></div>`;
  }
-}async function details(enc){
+}
+
+async function loadScheduleOnly(){
+ if(scheduleLoaded) return;
+ if(scheduleLoading) return scheduleLoading;
+
+ scheduleLoading=(async()=>{
+   $("status").textContent="CricLive • schedule loading…";
+   $("matches").innerHTML='<div class="small">Loading UPCOMING / COMPLETED matches…</div>';
+   try{
+     const scheduleRaw=await fetchCricketPath("/api/cricket/schedule");
+     const schedule=normalize(scheduleRaw);
+     const list=unique(schedule);
+
+     // Schedule contains future and completed matches. Do not make any per-match
+     // scorecard/commentary calls here.
+     cache.UPCOMING=list.filter(future);
+     cache.COMPLETED=list.filter(done);
+     scheduleLoaded=true;
+     updateStatus();
+     render();
+   }catch(e){
+     $("status").textContent="KINGS11 — schedule request failed";
+     $("matches").innerHTML=`<div class="card"><h3>Exact problem</h3><div class="small">${esc(e.message||String(e))}</div></div>`;
+   }finally{
+     scheduleLoading=null;
+   }
+ })();
+
+ return scheduleLoading;
+}
+
+async function loadMatches(){
+ // Initial page: ONLY the LIVE list endpoint is called.
+ // No scorecard/commentary call and no schedule call.
+ await loadLiveOnly();
+}
+
+
+function compactDetailScore(raw){
+  if(!raw) return "";
+  const root=cleanData(raw);
+  const match=root?.match || root;
+  const score=pick(match,["score","score_text","live_score","current_score"],"");
+  if(score) return String(score);
+
+  const scoreObj=deepFirst(root,["score"],0,new Set());
+  if(scoreObj && typeof scoreObj==="object"){
+    const team=pick(scoreObj,["team","team_name","name"],"");
+    const runs=pick(scoreObj,["runs","score"],"");
+    const wickets=pick(scoreObj,["wickets"],"");
+    const overs=pick(scoreObj,["overs"],"");
+    const s=runs!=="" ? `${runs}${wickets!==""?"/"+wickets:""}${overs!==""?` (${overs})`:""}` : "";
+    return team && s ? `${team} ${s}` : s;
+  }
+
+  const runs=deepFirst(root,["runs"]);
+  const wickets=deepFirst(root,["wickets"]);
+  const overs=deepFirst(root,["overs","current_overs"]);
+  if(runs!=="" && runs!=null){
+    return `${runs}${wickets!==""&&wickets!=null?"/"+wickets:""}${overs!==""&&overs!=null?` (${overs})`:""}`;
+  }
+  return "";
+}
+function updateCardFromDetails(m, extra){
+  const card=document.querySelector(`[data-match-id="${CSS.escape(String(m.id))}"]`);
+  if(!card) return;
+  const box=card.querySelector(".live-score-box");
+  if(!box) return;
+  const score=compactDetailScore(extra?.scorecard);
+  if(score){
+    box.textContent=score;
+    box.classList.add("has-score");
+  }else{
+    box.textContent="Scorecard opened • score unavailable";
+  }
+}
+
+async function details(enc){
  const m=[...cache.LIVE,...cache.UPCOMING,...cache.COMPLETED].find(x=>String(x.id)===decodeURIComponent(enc));if(!m)return;
  $("modalTitle").textContent=matchName(m);
  $("modalBody").innerHTML=`
@@ -581,6 +621,7 @@ async function loadMatches(){
  <div class="card"><h3>Virtual Game Value</h3><div class="kv"><span>Current index</span><b style="color:var(--gold);font-size:18px">${val(m)}</b></div><div class="notice">This is an in-game virtual index only. It has no cash value and no withdrawal function.</div></div>
  <div class="card"><h3>Entry</h3><div class="kv"><span>Joining fee</span><b>500 VC</b></div><div class="kv"><span>Your balance</span><b>${wallet.toLocaleString("en-IN")} VC</b></div><button class="primary" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN FOR 500 VC</button></div>`;
  $("modal").classList.add("show");
+ // STRICT API RULE: scorecard + commentary are requested ONLY for this clicked match ID, after MATCH DETAILS is opened. Never preload another match.
  const d=await loadDetailsExtras(m);
  const sbx=$("scorecardBox"), cbx=$("commentaryBox");
  if(sbx) sbx.innerHTML=renderScorecardData(d.scorecard,m)+(d.scorecardError?`<div class="small" style="margin-top:8px">${esc(d.scorecardError)}</div>`:'');
@@ -611,7 +652,16 @@ async function restoreSession(){
  if(data?.session)await bootUser(data.session);
  sb.auth.onAuthStateChange(async (_e,s)=>{if(s&&!session)await bootUser(s)});
 }
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");currentTab=b.dataset.tab;render()}));
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",async()=>{
+ document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+ b.classList.add("active");
+ currentTab=b.dataset.tab;
+ if(currentTab==="LIVE"){
+   await loadLiveOnly();
+ }else{
+   await loadScheduleOnly();
+ }
+}));
 $("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
 restoreSession();
 </script>
