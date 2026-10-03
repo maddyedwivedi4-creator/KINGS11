@@ -365,7 +365,18 @@ function teamName(x, fallback){
 }
 function teamLogo(x){
  if(!x || typeof x!=='object') return '';
- return pick(x,['logo','logo_url','image','team_logo','logoUrl','image_url'],'') || '';
+ const keys=[
+  'logo','logo_url','logoUrl','image','image_url','imageUrl',
+  'team_logo','teamLogo','team_logo_url','teamLogoUrl',
+  'crest','crest_url','crestUrl','badge','badge_url','badgeUrl',
+  'icon','icon_url','iconUrl','photo','photo_url','photoUrl',
+  'team_image','teamImage','team_image_url','teamImageUrl','image_link','imageLink'
+ ];
+ const direct=pick(x,keys,'');
+ if(typeof direct==='string' && /^https?:\/\//i.test(direct.trim())) return direct.trim();
+ const nested=deepFirst(x,keys);
+ if(typeof nested==='string' && /^https?:\/\//i.test(nested.trim())) return nested.trim();
+ return '';
 }
 function scalarText(v, fallback=''){
  if(v===undefined||v===null||v==='') return fallback;
@@ -414,6 +425,7 @@ function normalize(raw){
     statusDetail,
     result:scalarText(pick(m,['result','result_text','winner','winning_team','status_detail','short_status'],''),''),
     start:startValue,
+    end:scalarText(pick(m,['end_time','endTime','end_date','endDateTime','end_datetime','match_end_time','match_end_datetime','end_date_time'],''),'') || scalarText(deepFirst(m,['end_time','endTime','end_date','endDateTime','end_datetime','match_end_time','match_end_datetime','end_date_time'],8),'') || '',
     venue:scalarText(pick(m,['venue','venue_name','ground'],'') ,''),
     home:{name:teamName(h,scalarText(pick(m,['home_team_name','team1_name','first_team_name'],'Team 1'),'Team 1')),logo:teamLogo(h)},
     away:{name:teamName(a,scalarText(pick(m,['away_team_name','team2_name','second_team_name'],'Team 2'),'Team 2')),logo:teamLogo(a)},
@@ -435,18 +447,22 @@ function done(m){
  const s=[m.status,m.statusDetail,m.result,m.raw?.state,m.raw?.status,m.raw?.short_status,m.raw?.status_detail].map(x=>String(x??'').toLowerCase()).join(' | ');
  return s.includes('complete')||s.includes('completed')||s.includes('finished')||s.includes('result')||s.includes('ended')||s.includes('abandoned')||s.includes('cancelled')||s.includes('canceled')||s.includes('no result')||s.includes('won by')||s.includes('draw')||s.includes('tie');
 }
-function startMs(m){
-  const v=m?.start;
-  if(!v) return NaN;
-  if(typeof v==='number') return v<100000000000? v*1000 : v;
+function parseDateValue(v){
+  if(v===undefined||v===null||v==='') return NaN;
+  if(typeof v==='number') return v<100000000000?v*1000:v;
   const text=String(v).trim();
+  if(/^\d{10,13}$/.test(text)){
+    const n=Number(text);
+    return text.length===10?n*1000:n;
+  }
   let t=Date.parse(text);
   if(Number.isFinite(t)) return t;
-  // Some feeds omit the year/timezone. Try the current year without changing the source text.
   const year=new Date().getFullYear();
   t=Date.parse(`${text} ${year}`);
   return Number.isFinite(t)?t:NaN;
 }
+function startMs(m){ return parseDateValue(m?.start); }
+function endMs(m){ return parseDateValue(m?.end); }
 function startedCandidate(m){
   if(live(m)||done(m)) return false;
   const t=startMs(m);
@@ -474,8 +490,18 @@ async function getJSON(path){
 function fmt(v){
  if(v===undefined||v===null||v==='') return '-';
  const raw=String(v).trim();
- let d=new Date(raw);
- if(Number.isNaN(d.getTime())){ const y=new Date().getFullYear(); d=new Date(`${raw} ${y}`); }
+ let d;
+ // Never let a numeric epoch string be parsed as a year/date by Date.parse().
+ if(/^\d{10,13}$/.test(raw)){
+   const n=Number(raw);
+   d=new Date(raw.length===10?n*1000:n);
+ }else{
+   d=new Date(raw);
+   if(Number.isNaN(d.getTime())){
+     const y=new Date().getFullYear();
+     d=new Date(`${raw} ${y}`);
+   }
+ }
  if(Number.isNaN(d.getTime())) return raw;
  return d.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'Asia/Kolkata'})+' IST';
 }
@@ -488,7 +514,10 @@ function val(m){
  if(s.includes("wicket"))n-=3;
  return (n/100).toFixed(2)+"x";
 }
-function logo(u){return u?`<img src="${esc(u)}" onerror="this.style.display='none'">`:`<div class="team-logo">🏏</div>`}
+function logo(u){
+ if(!u) return `<div class="team-logo">🏏</div>`;
+ return `<img src="${esc(u)}" alt="Team logo" loading="lazy" onerror="this.outerHTML='<div class=&quot;team-logo&quot;>🏏</div>'">`;
+}
 function matchName(m){ return `${m.home.name} vs ${m.away.name}`; }
 function scoreText(m, side){
   const v=side==='home'?m.homeScore:m.awayScore;
@@ -671,8 +700,8 @@ function render(){
    <div class="team"><div class="team-left">${logo(m.home.logo)}<div class="team-name">${esc(m.home.name)}</div></div><div class="score">${live(m)?'':esc(scoreText(m,'home'))}</div></div>
    <div class="team"><div class="team-left">${logo(m.away.logo)}<div class="team-name">${esc(m.away.name)}</div></div><div class="score">${live(m)?'':esc(scoreText(m,'away'))}</div></div>
    <div class="meta"><b>📅 ${esc(fmt(m.start))}</b>${m.venue?" • 📍 "+esc(m.venue):""}</div>
-   ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score fields LIVE feed me available nahi hain')}</div>`:''}
-   ${currentTab==="COMPLETED" && m.result?`<div class="live-scoreline"><b>RESULT:</b> ${esc(m.result)}</div>`:''}
+   ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score abhi available nahi hai')}</div>`:''}
+   ${currentTab==="COMPLETED" ? `<div class="live-scoreline"><b>RESULT:</b> ${esc(m.result||deriveResult(m)||'Final result unavailable')}</div>`:''}
   </div>
   <div class="valuebar"><div><div class="value-label">KINGS11 VIRTUAL BHAV / GAME VALUE</div><div class="small">Match state ke saath update hota hai • cash value nahi</div></div><div class="value">${val(m)}</div></div>
   <div class="actions"><button class="btn join" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN • 500 VC</button><button class="btn details" onclick="details('${encodeURIComponent(String(m.id))}')">MATCH DETAILS</button></div>
@@ -722,8 +751,39 @@ function applySavedScheduleSnapshot(){
   scheduleLoaded=true;
   return true;
 }
+const HISTORY_KEY='kings11_match_history_v1';
+function readHistory(){try{const x=JSON.parse(localStorage.getItem(HISTORY_KEY)||'{}');return x&&typeof x==='object'?x:{}}catch(_){return {}}}
+function saveHistory(map){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(map))}catch(_){} }
+function rememberMatches(list, markLive=false){
+  const h=readHistory();
+  for(const m of (list||[])){
+    const k=String(m.id);
+    const old=h[k]||{};
+    h[k]={...old, ...m, raw:m.raw||old.raw, wasLive:old.wasLive||!!markLive, lastSeen:Date.now()};
+  }
+  saveHistory(h);
+  return h;
+}
+function parseRuns(score){
+  if(!score) return NaN;
+  const parts=String(score).match(/(\d+)\s*\/\s*(\d+)/g);
+  if(!parts||!parts.length) return NaN;
+  const last=parts[parts.length-1].match(/(\d+)\s*\/\s*(\d+)/);
+  return last?Number(last[1]):NaN;
+}
+function deriveResult(m){
+  if(m.result) return m.result;
+  const a=parseRuns(m.homeScore), b=parseRuns(m.awayScore);
+  if(!Number.isFinite(a)||!Number.isFinite(b)||a===b) return '';
+  const winner=a>b?m.home.name:m.away.name;
+  const margin=Math.abs(a-b);
+  return `${winner} won by ${margin} runs`;
+}
 function mergeAndRebuild(liveList=null, scheduleList=null){
   const map=new Map();
+  const history=readHistory();
+  const currentLiveIds=new Set((liveList||[]).map(m=>String(m.id)));
+  const currentScheduleIds=new Set((scheduleList||[]).map(m=>String(m.id)));
   const put=(m, prefer=false)=>{
     if(!m) return;
     const k=String(m.id);
@@ -732,31 +792,50 @@ function mergeAndRebuild(liveList=null, scheduleList=null){
   };
   (scheduleList||[]).forEach(m=>put(m,false));
   (liveList||[]).forEach(m=>put(m,true));
+  cache.LIVE.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
+  cache.UPCOMING.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
+  cache.COMPLETED.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
+  Object.values(history).forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
 
-  // Preserve the last useful live objects while a temporary live response is
-  // empty, but let an explicit completed result from schedule win.
-  cache.LIVE.forEach(m=>{
-    if(!map.has(String(m.id))) put(m,false);
-  });
-
+  rememberMatches(liveList||[],true);
+  rememberMatches(scheduleList||[],false);
   const all=unique([...map.values()]);
-  const liveNow=all.filter(live);
-  const completed=all.filter(done);
-  const transition=all.filter(m=>!live(m)&&!done(m)&&startedCandidate(m));
 
-  // Do not let a transient empty live response erase useful live matches.
-  // If a match has just started according to the cached schedule, expose it
-  // in LIVE until the live endpoint supplies its actual score.
-  cache.LIVE=unique(liveNow.length?liveNow:transition.length?transition:cache.LIVE.filter(m=>!done(m)));
+  // A match whose scheduled end has passed is finished even if the cached
+  // LIVE snapshot still carries an old "In Progress" status.
+  const endedByClock=all.filter(m=>{
+    const e=endMs(m);
+    return Number.isFinite(e) && e<=Date.now();
+  });
+  const liveNow=all.filter(live).filter(m=>!endedByClock.some(x=>String(x.id)===String(m.id)));
+  const explicitDone=all.filter(done);
+  const transition=all.filter(m=>!live(m)&&!done(m)&&startedCandidate(m)&&!endedByClock.some(x=>String(x.id)===String(m.id)));
 
-  // Schedule remains the source of truth for upcoming/finished. Matches that
-  // have just started are removed from UPCOMING to avoid showing them twice.
-  cache.UPCOMING=unique(all.filter(m=>future(m)));
-  cache.COMPLETED=unique(completed);
+  // If a previously-live match disappears from the current LIVE response,
+  // keep it in history and move it to FINISHED once its start time has passed.
+  // Do not depend on the stale LIVE status stored in history.
+  const finishedByHistory=[];
+  for(const m of all){
+    const old=history[String(m.id)];
+    if(!old?.wasLive) continue;
+    const id=String(m.id);
+    const disappeared=!currentLiveIds.has(id);
+    const scheduleSaysDone=currentScheduleIds.has(id) && done(m);
+    const noLongerFuture=!future(m);
+    if((disappeared && noLongerFuture) || scheduleSaysDone || endedByClock.some(x=>String(x.id)===id)){
+      const finishedCopy={...m,status:'Finished',statusDetail:m.statusDetail||'Finished',result:m.result||deriveResult(m)};
+      finishedByHistory.push(finishedCopy);
+    }
+  }
 
-  // If a match was previously LIVE and now has an explicit finished result,
-  // keep it in FINISHED even if the current live feed no longer contains it.
-  cache.LIVE=cache.LIVE.filter(m=>!done(m));
+  const liveSet=unique([...liveNow,...transition]);
+  const finished=unique([...explicitDone,...endedByClock,...finishedByHistory]
+    .filter(m=>!liveSet.some(x=>String(x.id)===String(m.id))))
+    .map(m=>({...m,result:m.result||deriveResult(m)}));
+
+  cache.LIVE=liveSet.filter(m=>!done(m));
+  cache.UPCOMING=unique(all.filter(m=>future(m)&&!liveSet.some(x=>String(x.id)===String(m.id))&& !finished.some(x=>String(x.id)===String(m.id))));
+  cache.COMPLETED=finished;
 }
 function updateStatus(){
  const b=budgetState();
