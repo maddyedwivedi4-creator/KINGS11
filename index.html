@@ -268,12 +268,53 @@ function arr(o){
   };
   return walk(o);
 }
+function deepFirst(obj, keys, depth=0, seen=new Set()){
+ if(depth>8 || obj==null || typeof obj!=="object" || seen.has(obj)) return "";
+ seen.add(obj);
+ if(Array.isArray(obj)){
+   for(const x of obj){const v=deepFirst(x,keys,depth+1,seen); if(v!==""&&v!=null)return v;}
+   return "";
+ }
+ for(const k of keys){
+   if(Object.prototype.hasOwnProperty.call(obj,k)){
+     const v=obj[k];
+     if(v!==undefined&&v!==null&&v!=="") return v;
+   }
+ }
+ for(const v of Object.values(obj)){
+   const r=deepFirst(v,keys,depth+1,seen);
+   if(r!==""&&r!=null)return r;
+ }
+ return "";
+}
 function normalize(raw){
  return arr(raw).map((m,i)=>{
   const h=m.first_team||m.home_team||m.team1||m.home||{},a=m.second_team||m.away_team||m.team2||m.away||{};
   const tn=(x,d)=>typeof x==="string"?x:pick(x,["full_name","name","team_name","title"],d);
   const tl=x=>typeof x==="object"?pick(x,["logo","logo_url","image","team_logo"],""):"";
-  return {raw:m,id:pick(m,["match_id","matchId","id"],i),title:pick(m,["match_desc","match_name","title","name"],"Cricket Match"),series:pick(m,["series_name","series","tournament"],""),status:pick(m,["state","status","match_status"],""),start:pick(m,["start_time","startTime","date","match_date","scheduled_at"],""),venue:pick(m,["venue","venue_name","ground"],""),home:{name:tn(h,pick(m,["home_team_name","team1_name"],"Team 1")),logo:tl(h)},away:{name:tn(a,pick(m,["away_team_name","team2_name"],"Team 2")) ,logo:tl(a)},score:pick(m,["score","live_score","current_score","score_text"],""),homeScore:pick(m,["team1_score","home_score","first_team_score"],""),awayScore:pick(m,["team2_score","away_score","second_team_score"],""),overs:pick(m,["overs","current_overs"],""),crr:pick(m,["crr","current_run_rate"],""),rrr:pick(m,["rrr","required_run_rate"],""),lastBall:pick(m,["last_ball","lastBall","latest_ball"],"")};
+
+  // IMPORTANT: these values are extracted ONLY from the already-fetched LIVE/SCHEDULE
+  // response. This function makes NO API request.
+  const score=deepFirst(m,["score","live_score","current_score","score_text"]);
+  const homeScore=deepFirst(m,["team1_score","home_score","first_team_score"]);
+  const awayScore=deepFirst(m,["team2_score","away_score","second_team_score"]);
+  const overs=deepFirst(m,["overs","current_overs"]);
+  const crr=deepFirst(m,["crr","current_run_rate"]);
+  const rrr=deepFirst(m,["rrr","required_run_rate"]);
+  const lastBall=deepFirst(m,["last_ball","lastBall","latest_ball"]);
+
+  return {
+    raw:m,
+    id:pick(m,["match_id","matchId","id"],i),
+    title:pick(m,["match_desc","match_name","title","name"],"Cricket Match"),
+    series:pick(m,["series_name","series","tournament"],""),
+    status:pick(m,["state","status","match_status"],""),
+    start:pick(m,["start_time","startTime","date","match_date","scheduled_at"],""),
+    venue:pick(m,["venue","venue_name","ground"],""),
+    home:{name:tn(h,pick(m,["home_team_name","team1_name"],"Team 1")),logo:tl(h)},
+    away:{name:tn(a,pick(m,["away_team_name","team2_name"],"Team 2")),logo:tl(a)},
+    score,homeScore,awayScore,overs,crr,rrr,lastBall
+  };
  });
 }
 function live(m){
@@ -492,7 +533,7 @@ function render(){
    <div class="team"><div class="team-left">${logo(m.home.logo)}<div class="team-name">${esc(m.home.name)}</div></div><div class="score">${esc(scoreText(m,'home'))}</div></div>
    <div class="team"><div class="team-left">${logo(m.away.logo)}<div class="team-name">${esc(m.away.name)}</div></div><div class="score">${esc(scoreText(m,'away'))}</div></div>
    <div class="meta">${esc(m.title)} • ${esc(fmt(m.start))}${m.venue?" • "+esc(m.venue):""}</div>
-   ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score not included in LIVE feed')}</div>`:''}
+   ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score fields LIVE feed me available nahi hain')}</div>`:''}
   </div>
   <div class="valuebar"><div><div class="value-label">KINGS11 VIRTUAL BHAV / GAME VALUE</div><div class="small">Match state ke saath update hota hai • cash value nahi</div></div><div class="value">${val(m)}</div></div>
   <div class="actions"><button class="btn join" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN • 500 VC</button><button class="btn details" onclick="details('${encodeURIComponent(String(m.id))}')">MATCH DETAILS</button></div>
@@ -569,46 +610,6 @@ async function loadMatches(){
  // Initial page: ONLY the LIVE list endpoint is called.
  // No scorecard/commentary call and no schedule call.
  await loadLiveOnly();
-}
-
-
-function compactDetailScore(raw){
-  if(!raw) return "";
-  const root=cleanData(raw);
-  const match=root?.match || root;
-  const score=pick(match,["score","score_text","live_score","current_score"],"");
-  if(score) return String(score);
-
-  const scoreObj=deepFirst(root,["score"],0,new Set());
-  if(scoreObj && typeof scoreObj==="object"){
-    const team=pick(scoreObj,["team","team_name","name"],"");
-    const runs=pick(scoreObj,["runs","score"],"");
-    const wickets=pick(scoreObj,["wickets"],"");
-    const overs=pick(scoreObj,["overs"],"");
-    const s=runs!=="" ? `${runs}${wickets!==""?"/"+wickets:""}${overs!==""?` (${overs})`:""}` : "";
-    return team && s ? `${team} ${s}` : s;
-  }
-
-  const runs=deepFirst(root,["runs"]);
-  const wickets=deepFirst(root,["wickets"]);
-  const overs=deepFirst(root,["overs","current_overs"]);
-  if(runs!=="" && runs!=null){
-    return `${runs}${wickets!==""&&wickets!=null?"/"+wickets:""}${overs!==""&&overs!=null?` (${overs})`:""}`;
-  }
-  return "";
-}
-function updateCardFromDetails(m, extra){
-  const card=document.querySelector(`[data-match-id="${CSS.escape(String(m.id))}"]`);
-  if(!card) return;
-  const box=card.querySelector(".live-score-box");
-  if(!box) return;
-  const score=compactDetailScore(extra?.scorecard);
-  if(score){
-    box.textContent=score;
-    box.classList.add("has-score");
-  }else{
-    box.textContent="Scorecard opened • score unavailable";
-  }
 }
 
 async function details(enc){
