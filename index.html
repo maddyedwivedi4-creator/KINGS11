@@ -275,11 +275,11 @@ function normalize(raw){
 }
 function live(m){
  const s=String(m.status).toLowerCase();
- return /live|in progress|started|playing|innings|stumps|drinks|break/.test(s);
+ return s.includes("live")||s.includes("in progress")||s.includes("started")||s.includes("playing")||s.includes("innings")||s==="1"||s==="2";
 }
 function done(m){
  const s=String(m.status).toLowerCase();
- return /complete|completed|finished|result|ended|abandoned|cancelled|canceled|no result|won|loss|tie/.test(s);
+ return s.includes("complete")||s.includes("completed")||s.includes("finished")||s.includes("result")||s.includes("ended")||s.includes("abandoned")||s.includes("cancelled")||s.includes("canceled")||s.includes("no result");
 }
 function future(m){return !live(m)&&!done(m)}
 async function getJSON(path){
@@ -313,20 +313,65 @@ function render(){
  </article>`).join(""):`<div class="small" style="padding:40px;text-align:center">No ${currentTab.toLowerCase()} matches available.</div>`;
 }
 async function loadMatches(){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),10000);
+ $("status").textContent="Cricket data loading…";
+ $("matches").innerHTML='<div class="small">Connecting to LIVE + SCHEDULE…</div>';
+
  try{
-  const [l,s]=await Promise.all([getJSON("/api/cricket/live"),getJSON("/api/cricket/schedule")]);
-  const all=[...normalize(l),...normalize(s)],seen=new Set();
-  all.filter(m=>{const k=String(m.id);if(seen.has(k))return false;seen.add(k);return true});
-  const uniq=all.filter((m,i,a)=>a.findIndex(x=>String(x.id)===String(m.id))===i);
-  cache.LIVE=uniq.filter(live);cache.UPCOMING=uniq.filter(future);cache.COMPLETED=uniq.filter(done);
-  $("status").textContent=`CricLive connected • ${cache.LIVE.length} live • ${cache.UPCOMING.length} upcoming • ${wallet.toLocaleString("en-IN")} VC`;
-  $("lastUpdated").textContent="Updated "+new Date().toLocaleTimeString("en-IN");render();
+   const fetchOne=async(path)=>{
+     const r=await fetch(CRICKET_API+path,{method:"GET",mode:"cors",cache:"no-store",signal:controller.signal,headers:{Accept:"application/json"}});
+     const text=await r.text();
+     if(!r.ok) throw Error(`${path}: HTTP ${r.status}`);
+     let j;
+     try{j=JSON.parse(text)}catch{throw Error(`${path}: Worker response JSON nahi hai`)}
+     if(j?.success===false) throw Error(`${path}: ${j.error||j.message||"success:false"}`);
+     return j;
+   };
+
+   const [lr,sr]=await Promise.allSettled([
+     fetchOne("/api/cricket/live"),
+     fetchOne("/api/cricket/schedule")
+   ]);
+
+   if(lr.status==="rejected" && sr.status==="rejected"){
+     const a=lr.reason?.message||"LIVE failed", b=sr.reason?.message||"SCHEDULE failed";
+     throw Error(a+" | "+b);
+   }
+
+   const liveRaw=lr.status==="fulfilled"?lr.value:null;
+   const scheduleRaw=sr.status==="fulfilled"?sr.value:null;
+
+   const liveAll=liveRaw?normalize(liveRaw):[];
+   const schedule=scheduleRaw?normalize(scheduleRaw):[];
+   const all=unique([...liveAll,...schedule]);
+
+   cache.LIVE=all.filter(live);
+   cache.UPCOMING=all.filter(future);
+   cache.COMPLETED=all.filter(done);
+
+   const failed=[];
+   if(lr.status==="rejected")failed.push("LIVE failed: "+lr.reason.message);
+   if(sr.status==="rejected")failed.push("SCHEDULE failed: "+sr.reason.message);
+
+   $("status").textContent=
+     `CricLive • ${cache.LIVE.length} LIVE • ${cache.UPCOMING.length} UPCOMING • ${cache.COMPLETED.length} FINISHED`+
+     (failed.length?" • "+failed.join(" | "):"");
+
+   $("lastUpdated").textContent="Updated "+new Date().toLocaleTimeString("en-IN");
+
+   if(!all.length){
+     $("matches").innerHTML=`<div class="card"><h3>Worker response received, but matches not detected</h3><details open><summary>Diagnostic response</summary><pre>${esc(JSON.stringify({live:liveRaw,schedule:scheduleRaw},null,2).slice(0,12000))}</pre></details></div>`;
+   }else{
+     render();
+   }
  }catch(e){
-   $("status").textContent="Cricket server connection error: "+e.message;
-   $("matches").innerHTML=`<div class="card"><h3>Cricket data load nahi hua</h3><div class="notice">${esc(e.message)}</div></div>`;
+   $("status").textContent="KINGS11 diagnostic — data request failed";
+   $("matches").innerHTML=`<div class="card"><h3>Exact problem</h3><div class="small">${esc(e.message||String(e))}</div><div class="small" style="margin-top:10px">Loading ab permanently nahi rukega. Is message se pata chalega ki browser fetch/CORS issue hai ya response parsing issue.</div></div>`;
+ }finally{
+   clearTimeout(timer);
  }
-}
-async function details(enc){
+}async function details(enc){
  const m=[...cache.LIVE,...cache.UPCOMING,...cache.COMPLETED].find(x=>String(x.id)===decodeURIComponent(enc));if(!m)return;
  $("modalTitle").textContent=`${m.home.name} vs ${m.away.name}`;
  $("modalBody").innerHTML=`<div class="card"><div class="kv"><span>Series</span><b>${esc(m.series||"-")}</b></div><div class="kv"><span>Status</span><b>${esc(m.status||"-")}</b></div><div class="kv"><span>Start</span><b>${esc(fmt(m.start))}</b></div><div class="kv"><span>Venue</span><b>${esc(m.venue||"-")}</b></div></div><div class="card"><h3>Virtual Game Value</h3><div class="kv"><span>Current index</span><b style="color:var(--gold);font-size:18px">${val(m)}</b></div><div class="notice">This is an in-game virtual index only. It has no cash value and no withdrawal function.</div></div><div class="card"><h3>Entry</h3><div class="kv"><span>Joining fee</span><b>500 VC</b></div><div class="kv"><span>Your balance</span><b>${wallet.toLocaleString("en-IN")} VC</b></div><button class="primary" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN FOR 500 VC</button></div>`;
@@ -346,11 +391,10 @@ async function joinMatch(enc){
  alert(`Match joined. 500 VC used. Remaining VC: ${wallet}`);
 }
 async function restoreSession(){
-  // Match listing is independent of Supabase authentication.
-  // Load CricLive immediately so LIVE/UPCOMING/COMPLETED are visible first.
-  await loadMatches();
+  // Match listing must work independently of Supabase authentication.
+  loadMatches();
   if(!configured()){
-    $("status").textContent=`CricLive connected • ${cache.LIVE.length} live • ${cache.UPCOMING.length} upcoming • ${cache.COMPLETED.length} finished`;
+    $("status").textContent="Cricket server connected • Login/VC setup pending";
     return;
   }
   sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
