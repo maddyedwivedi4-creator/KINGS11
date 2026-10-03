@@ -306,7 +306,12 @@ function scoreText(m, side){
   const v=side==='home'?m.homeScore:m.awayScore;
   if(v) return String(v);
   if(m.score) return String(m.score);
-  return '';
+  const raw=m.raw||{};
+  const candidates = side==='home'
+    ? ['team1_score','home_score','first_team_score']
+    : ['team2_score','away_score','second_team_score'];
+  const x=pick(raw,candidates,'');
+  return x ? String(x) : '';
 }
 function liveLine(m){
   const parts=[];
@@ -318,56 +323,154 @@ function liveLine(m){
   return parts.join(' • ');
 }
 function findScoreObjects(root, out=[], depth=0){
-  if(depth>7 || root==null) return out;
-  if(Array.isArray(root)){ for(const x of root) findScoreObjects(x,out,depth+1); return out; }
-  if(typeof root!=='object') return out;
-  const hasScore=('score' in root)||('runs' in root)||('wickets' in root)||('overs' in root);
+  if(depth>10 || root==null) return out;
+  if(Array.isArray(root)){ root.forEach(x=>findScoreObjects(x,out,depth+1)); return out; }
+  if(typeof root!=="object") return out;
+  const keys=Object.keys(root).map(k=>k.toLowerCase());
+  const hasScore=keys.some(k=>[
+    "score","score_text","live_score","current_score","runs","wickets","overs",
+    "crr","rrr","current_run_rate","required_run_rate","current_batsmen",
+    "current_bowler","last_ball","batting","bowling","innings"
+  ].includes(k));
   if(hasScore) out.push(root);
-  for(const k of Object.keys(root)) findScoreObjects(root[k],out,depth+1);
+  Object.values(root).forEach(v=>findScoreObjects(v,out,depth+1));
   return out;
+}
+function cleanData(raw){
+  return raw?.data ?? raw?.result ?? raw?.response ?? raw;
 }
 function renderScorecardData(raw, m){
   if(!raw) return '<div class="small">Scorecard data unavailable.</div>';
-  const candidates=findScoreObjects(raw).slice(0,30);
+  const root=cleanData(raw);
   let html='';
+
+  const addKV=(label,value)=>{
+    if(value===undefined||value===null||value==='') return;
+    html += `<div class="kv"><span>${esc(label)}</span><b>${esc(String(value))}</b></div>`;
+  };
+
+  // CricLive examples can expose a top-level match object.
+  const match=root?.match;
+  if(match && typeof match==="object"){
+    addKV("Score", pick(match,["score","score_text","live_score","current_score"],""));
+    addKV("Overs", pick(match,["overs","current_overs"],""));
+    addKV("CRR", pick(match,["crr","current_run_rate"],""));
+    addKV("RRR", pick(match,["rrr","required_run_rate"],""));
+    addKV("Last ball", pick(match,["last_ball","lastBall","latest_ball"],""));
+
+    const bats=match.current_batsmen || match.batsmen;
+    if(Array.isArray(bats) && bats.length){
+      html += '<div class="subhead">CURRENT BATSMEN</div>';
+      bats.slice(0,4).forEach(b=>{
+        if(typeof b==="string") addKV("Batsman",b);
+        else addKV(pick(b,["name","player","batter"],"Batsman"),
+                  [pick(b,["runs","score"],""), pick(b,["balls","balls_faced"],"")].filter(x=>x!==''&&x!==undefined).join(" • "));
+      });
+    }
+    const bow=match.current_bowler || match.bowler;
+    if(bow && typeof bow==="object"){
+      html += '<div class="subhead">CURRENT BOWLER</div>';
+      addKV(pick(bow,["name","player","bowler"],"Bowler"),
+            [pick(bow,["overs"],""),pick(bow,["runs"],""),pick(bow,["wickets"],"")].filter(x=>x!==''&&x!==undefined).join(" • "));
+    }
+  }
+
+  const scoreObjects=findScoreObjects(root);
   const seen=new Set();
-  for(const x of candidates){
-    const name=pick(x,['team','team_name','name','title','batting_team'],'');
-    const score=pick(x,['score','score_text'],'');
+  for(const x of scoreObjects.slice(0,80)){
+    const name=pick(x,["team","team_name","batting_team","name","title"],"");
+    const score=pick(x,["score","score_text","live_score","current_score"],"");
     const runs=x.runs!==undefined?x.runs:'';
     const wickets=x.wickets!==undefined?x.wickets:'';
     const overs=x.overs!==undefined?x.overs:'';
-    const text=[name, score || (runs!=='' ? `${runs}${wickets!==''?'/'+wickets:''}`:'') , overs!==''?`(${overs} ov)`:'' ].filter(Boolean).join(' ');
-    if(!text || seen.has(text)) continue;
-    seen.add(text); html+=`<div class="kv"><span>${esc(name||'Score')}</span><b>${esc(text.replace(name,'').trim()||score||String(runs))}</b></div>`;
-  }
-  if(!html){
-    const data=raw?.data??raw;
-    const topScore=pick(data,['score','score_text','current_score'],'');
-    const topCrr=pick(data,['crr','current_run_rate'],'');
-    const topRrr=pick(data,['rrr','required_run_rate'],'');
-    const topOvers=pick(data,['overs','current_overs'],'');
-    if(topScore||topCrr||topRrr||topOvers){
-      html+=topScore?`<div class="kv"><span>Score</span><b>${esc(topScore)}</b></div>`:'';
-      html+=topOvers?`<div class="kv"><span>Overs</span><b>${esc(topOvers)}</b></div>`:'';
-      html+=topCrr?`<div class="kv"><span>CRR</span><b>${esc(topCrr)}</b></div>`:'';
-      html+=topRrr?`<div class="kv"><span>RRR</span><b>${esc(topRrr)}</b></div>`:'';
+    const crr=pick(x,["crr","current_run_rate"],"");
+    const rrr=pick(x,["rrr","required_run_rate"],"");
+    const key=JSON.stringify([name,score,runs,wickets,overs,crr,rrr]);
+    if(seen.has(key)) continue;
+    seen.add(key);
+    if(name || score || runs!=='' || wickets!=='' || overs!=='' || crr || rrr){
+      if(name || score || runs!=='' || wickets!=='' || overs!==''){
+        const scoreVal=score || (runs!=='' ? `${runs}${wickets!==''?'/'+wickets:''}` : '');
+        if(name && scoreVal) addKV(name, overs!==''?`${scoreVal} (${overs} ov)`:scoreVal);
+        else if(scoreVal) addKV("Score",overs!==''?`${scoreVal} (${overs} ov)`:scoreVal);
+      }
+      if(crr) addKV("CRR",crr);
+      if(rrr) addKV("RRR",rrr);
     }
   }
-  return html || '<div class="small">CricLive ne is match ke liye scorecard fields return nahi kiye.</div>';
+
+  // Batting/bowling tables when the provider returns innings data.
+  const inningsCandidates=[];
+  const walk=(v,d=0)=>{
+    if(d>8||v==null)return;
+    if(Array.isArray(v)){ v.forEach(x=>walk(x,d+1)); return; }
+    if(typeof v!=="object")return;
+    if(Array.isArray(v.batting)) inningsCandidates.push({type:"batting",rows:v.batting});
+    if(Array.isArray(v.bowling)) inningsCandidates.push({type:"bowling",rows:v.bowling});
+    Object.values(v).forEach(x=>walk(x,d+1));
+  };
+  walk(root);
+  const renderedSections=new Set();
+  for(const sec of inningsCandidates){
+    if(renderedSections.has(sec.type)) continue;
+    const rows=sec.rows.filter(Boolean).slice(0,15);
+    if(!rows.length) continue;
+    renderedSections.add(sec.type);
+    html += `<div class="subhead">${sec.type==="batting"?"BATTING":"BOWLING"}</div>`;
+    rows.forEach(r=>{
+      if(typeof r==="string") addKV(sec.type==="batting"?"Batter":"Bowler",r);
+      else {
+        const nm=pick(r,["name","player","batter","bowler"],"");
+        const vals=sec.type==="batting"
+          ? [pick(r,["runs","score"],""),pick(r,["balls","balls_faced"],""),pick(r,["fours","4s"],""),pick(r,["sixes","6s"],"")].filter(x=>x!==''&&x!==undefined)
+          : [pick(r,["overs"],""),pick(r,["maidens"],""),pick(r,["runs"],""),pick(r,["wickets"],"")].filter(x=>x!==''&&x!==undefined);
+        if(nm||vals.length) addKV(nm || (sec.type==="batting"?"Batter":"Bowler"),vals.join(" • "));
+      }
+    });
+  }
+
+  return html || '<div class="small">CricLive ne is match ke liye score fields return nahi kiye.</div>';
 }
 function renderCommentary(raw){
   if(!raw) return '<div class="small">Commentary unavailable.</div>';
-  let arrs=[];
-  const walk=(v,d=0)=>{ if(d>7||v==null)return; if(Array.isArray(v)){ if(v.length&&v.some(x=>typeof x==='object')) arrs.push(v); v.forEach(x=>walk(x,d+1)); return;} if(typeof v==='object') Object.values(v).forEach(x=>walk(x,d+1)); };
-  walk(raw);
-  let list=arrs.flat().filter(x=>typeof x==='string'||typeof x==='object').slice(-20).reverse();
-  const texts=[]; const seen=new Set();
-  for(const x of list){
-    const t=typeof x==='string'?x:pick(x,['commentary','text','message','description','event','ball'],'');
-    if(t&&!seen.has(t)){seen.add(t);texts.push(t);}
-  }
-  return texts.length?texts.map((t,i)=>`<div class="commentary-line"><span>${i+1}</span><b>${esc(t)}</b></div>`).join(''):'<div class="small">Commentary data unavailable.</div>';
+  const root=cleanData(raw);
+  const texts=[];
+  const seen=new Set();
+
+  const add=(v)=>{
+    if(v===undefined||v===null) return;
+    const t=typeof v==="string"?v:pick(v,["commentary","text","message","description","event","ball","last_ball"],"");
+    if(t && !seen.has(t)){seen.add(t);texts.push(String(t));}
+  };
+
+  const walk=(v,d=0)=>{
+    if(d>9||v==null)return;
+    if(Array.isArray(v)){v.forEach(add);v.forEach(x=>walk(x,d+1));return;}
+    if(typeof v!=="object")return;
+    ["commentary","comments","commentaries","events","balls","deliveries"].forEach(k=>{
+      if(k in v) walk(v[k],d+1);
+    });
+    Object.values(v).forEach(x=>walk(x,d+1));
+  };
+  walk(root);
+  return texts.slice(-20).reverse().map((t,i)=>`<div class="commentary-line"><span>${i+1}</span><b>${esc(t)}</b></div>`).join('') || '<div class="small">Commentary data unavailable.</div>';
+}
+async function loadDetailsExtras(m){
+  const key=String(m.id);
+  if(detailCache.has(key)) return detailCache.get(key);
+  const p=(async()=>{
+    const [sr,cr]=await Promise.allSettled([
+      getJSON(`/api/cricket/match/${encodeURIComponent(key)}/scorecard`),
+      getJSON(`/api/cricket/match/${encodeURIComponent(key)}/commentary`)
+    ]);
+    return {
+      scorecard:sr.status==='fulfilled'?sr.value:null,
+      commentary:cr.status==='fulfilled'?cr.value:null,
+      scorecardError:sr.status==='rejected'?sr.reason?.message:'',
+      commentaryError:cr.status==='rejected'?cr.reason?.message:''
+    };
+  })();
+  detailCache.set(key,p); return p;
 }
 async function loadDetailsExtras(m){
   const key=String(m.id);
@@ -399,8 +502,9 @@ function render(){
 async function hydrateLiveCard(m){
   try{
     const d=await getJSON(`/api/cricket/match/${encodeURIComponent(String(m.id))}/scorecard`);
-    const data=d?.data??d;
-    const score=pick(data,['score','live_score','current_score','score_text'],'');
+    const data=cleanData(d);
+    const matchData=data?.match||data;
+    const score=pick(matchData,['score','live_score','current_score','score_text'],'');
     const crr=pick(data,['crr','current_run_rate'],'');
     const rrr=pick(data,['rrr','required_run_rate'],'');
     const overs=pick(data,['overs','current_overs'],'');
