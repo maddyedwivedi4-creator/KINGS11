@@ -115,7 +115,7 @@ let detailCache=new Map();
 const API_BUDGET_KEY="kings11_api_budget_v1";
 const API_BUDGET_MAX=100;
 const ENDPOINT_CACHE_TTL={
-  live: 5*60*1000,
+  live: 30*60*1000,
   schedule: 30*60*1000,
   scorecard: 24*60*60*1000,
   commentary: 30*60*1000
@@ -151,6 +151,16 @@ function readEndpointCache(path){
     if(x && ttl && Date.now()-x.ts<ttl) return x.data;
   }catch(_){}
   return null;
+}
+function responseMatchCount(data){
+  try{ return arr(data).length; }catch(_){ return 0; }
+}
+function isUsefulMatchResponse(path,data){
+  const n=responseMatchCount(data);
+  if(n>0) return true;
+  // A zero-match response is not allowed to erase a previously successful
+  // non-empty snapshot. It may be a temporary upstream/transform issue.
+  return false;
 }
 function writeEndpointCache(path,data){
   try{localStorage.setItem(cacheKey(path),JSON.stringify({ts:Date.now(),data}));}catch(_){}
@@ -649,6 +659,32 @@ async function fetchCricketPath(path){
 
 let liveLoaded=false, scheduleLoaded=false, scheduleLoading=null;
 
+function readStaleSnapshot(kind){
+  try{
+    const key=kind==='live'?'kings11_last_live':'kings11_last_schedule';
+    const x=JSON.parse(localStorage.getItem(key)||'null');
+    return x?.data || null;
+  }catch(_){ return null; }
+}
+function applySavedLiveSnapshot(){
+  const saved=readStaleSnapshot('live');
+  if(!saved) return false;
+  const liveAll=normalize(saved);
+  cache.LIVE=unique(liveAll.filter(live));
+  liveLoaded=true;
+  return true;
+}
+function applySavedScheduleSnapshot(){
+  const saved=readStaleSnapshot('schedule');
+  if(!saved) return false;
+  const schedule=normalize(saved);
+  const list=unique(schedule);
+  cache.UPCOMING=unique(list.filter(future));
+  cache.COMPLETED=unique(list.filter(done));
+  scheduleLoaded=true;
+  return true;
+}
+
 function updateStatus(){
  const b=budgetState();
  $("status").textContent=
@@ -657,47 +693,35 @@ function updateStatus(){
 }
 
 async function refreshLiveNow(){
-  // Manual refresh only. One LIVE hit. If the user has already opened
-  // UPCOMING/COMPLETED, refresh that schedule too so finished matches can move
-  // out of LIVE with their final result. No automatic polling/retry.
-  liveLoaded=false;
-  try{ localStorage.removeItem(cacheKey("/api/cricket/live")); }catch(_){}
-  await loadLiveOnly();
-  if(scheduleLoaded){
-    scheduleLoaded=false;
-    try{ localStorage.removeItem(cacheKey("/api/cricket/schedule")); }catch(_){}
-    await loadScheduleOnly();
-  }
+  // Refresh never clears the currently displayed data.
+  // Fresh 30-minute cache => zero API hits.
+  // If a new response is empty/bad, keep the last useful snapshot.
+  await Promise.allSettled([loadLiveOnly(true), loadScheduleOnly(true)]);
 }
 
-async function loadLiveOnly(){
- if(liveLoaded) return;
+async function loadLiveOnly(force=false){
+ if(liveLoaded && !force) return;
  $("status").textContent="CricLive • LIVE data loading…";
  $("matches").innerHTML='<div class="small">Loading LIVE matches…</div>';
  try{
    const liveRaw=await fetchCricketPath("/api/cricket/live");
    const liveAll=normalize(liveRaw);
-   cache.LIVE=unique(liveAll.filter(live));
-   localStorage.setItem("kings11_last_live", JSON.stringify({ts:Date.now(), data:liveRaw}));
+   const nextLive=unique(liveAll.filter(live));
+   if(nextLive.length>0 || cache.LIVE.length===0){
+     cache.LIVE=nextLive;
+     // Only save a non-empty successful LIVE snapshot, so a transient empty
+     // response cannot wipe useful match data.
+     if(nextLive.length>0) localStorage.setItem("kings11_last_live", JSON.stringify({ts:Date.now(), data:liveRaw}));
+   }
    liveLoaded=true;
    updateStatus();
-   render();
- }catch(e){
-   // NEVER retry automatically on 429. Use the last successful response instead.
-   if(String(e.message||"").includes("HTTP 429")){
-     try{
-       const saved=JSON.parse(localStorage.getItem("kings11_last_live")||"null");
-       if(saved?.data){
-         const liveAll=normalize(saved.data);
-         cache.LIVE=unique(liveAll.filter(live));
-         liveLoaded=true;
-         $("status").textContent="CricLive quota busy (HTTP 429) • last saved LIVE data";
-         render();
-         return;
-       }
-     }catch(_){}
-     $("status").textContent="CricLive quota busy (HTTP 429) • no new request will be retried";
-     $("matches").innerHTML='<div class="card"><h3>API quota temporarily busy</h3><div class="small">CricLive ne HTTP 429 diya hai. KINGS11 automatic retry nahi karega, taaki aur API hits waste na hon.</div></div>';
+   render(); }catch(e){
+   // Never retry. If the upstream is unavailable (429/5xx/network), show the
+   // last successful snapshot instead of making another hit.
+   if(applySavedLiveSnapshot()){
+     updateStatus();
+     render();
+     $("status").textContent=`CricLive • LIVE snapshot (${new Date().toLocaleTimeString("en-IN")}) • fresh request failed: ${esc(e.message||String(e))}`;
      return;
    }
    $("status").textContent="KINGS11 — LIVE request failed";
@@ -705,8 +729,8 @@ async function loadLiveOnly(){
  }
 }
 
-async function loadScheduleOnly(){
- if(scheduleLoaded) return;
+async function loadScheduleOnly(force=false){
+ if(scheduleLoaded && !force) return;
  if(scheduleLoading) return scheduleLoading;
 
  scheduleLoading=(async()=>{
@@ -714,33 +738,25 @@ async function loadScheduleOnly(){
    $("matches").innerHTML='<div class="small">Loading UPCOMING / COMPLETED matches…</div>';
    try{
      const scheduleRaw=await fetchCricketPath("/api/cricket/schedule");
-     localStorage.setItem("kings11_last_schedule", JSON.stringify({ts:Date.now(), data:scheduleRaw}));
      const schedule=normalize(scheduleRaw);
      const list=unique(schedule);
 
-     // Schedule contains future and completed matches. Do not make any per-match
-     // scorecard/commentary calls here.
-     cache.UPCOMING=list.filter(future);
-     cache.COMPLETED=list.filter(done);
+     // Never erase a useful schedule with an empty upstream response.
+     if(list.length>0 || (cache.UPCOMING.length===0 && cache.COMPLETED.length===0)){
+       cache.UPCOMING=list.filter(future);
+       cache.COMPLETED=list.filter(done);
+       if(list.length>0) localStorage.setItem("kings11_last_schedule", JSON.stringify({ts:Date.now(), data:scheduleRaw}));
+     }
      scheduleLoaded=true;
      updateStatus();
-     render();
-   }catch(e){
-     if(String(e.message||"").includes("HTTP 429")){
-       try{
-         const saved=JSON.parse(localStorage.getItem("kings11_last_schedule")||"null");
-         if(saved?.data){
-           const schedule=normalize(saved.data);
-           cache.UPCOMING=unique(schedule.filter(future));
-           cache.COMPLETED=unique(schedule.filter(done));
-           scheduleLoaded=true;
-           $("status").textContent="CricLive quota busy (HTTP 429) • last saved schedule";
-           render();
-           return;
-         }
-       }catch(_){}
-       $("status").textContent="CricLive quota busy (HTTP 429) • no retry";
-       $("matches").innerHTML='<div class="card"><h3>API quota temporarily busy</h3><div class="small">Automatic retry band hai. Quota available hone par hi fresh data request ki jayegi.</div></div>';
+     render(); }catch(e){
+     // Never retry. Show the last successful schedule snapshot if available,
+     // even when it is older than 30 minutes, so a temporary 5xx cannot blank
+     // the UPCOMING/COMPLETED tabs.
+     if(applySavedScheduleSnapshot()){
+       updateStatus();
+       render();
+       $("status").textContent=`CricLive • saved schedule snapshot • fresh request failed: ${esc(e.message||String(e))}`;
        return;
      }
      $("status").textContent="KINGS11 — schedule request failed";
@@ -754,9 +770,9 @@ async function loadScheduleOnly(){
 }
 
 async function loadMatches(){
- // Initial page: ONLY the LIVE list endpoint is called.
- // No scorecard/commentary call and no schedule call.
- await loadLiveOnly();
+ // Initial page loads LIVE + SCHEDULE once. Both endpoints are cached for
+ // 30 minutes, so reloads/tab changes during that window make zero API hits.
+ await Promise.allSettled([loadLiveOnly(), loadScheduleOnly()]);
 }
 
 async function details(enc){
