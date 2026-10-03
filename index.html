@@ -26,6 +26,8 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,13,24,.95);backdrop-fi
 .auth{position:fixed;inset:0;z-index:120;background:#000b;display:grid;place-items:center;padding:22px;overflow:auto}.auth-box{width:min(430px,100%);background:linear-gradient(145deg,#0d1b2d,#091728);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 20px 60px #0006}.auth-logo{text-align:center;font-size:32px;font-weight:950}.auth-logo span{color:var(--green)}.auth-sub{text-align:center;color:var(--muted);font-size:12px;margin:4px 0 20px}.switch{display:flex;gap:7px;margin-bottom:14px}.switch button{flex:1;border:1px solid var(--line);background:#101f32;color:var(--muted);padding:10px;border-radius:10px;font-weight:900}.switch button.active{background:var(--green);color:#03140b}.notice{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
 .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#0b1b2c;border:1px solid var(--line);border-radius:14px;padding:12px}.stat small{display:block;color:var(--muted);font-size:10px}.stat b{display:block;font-size:19px;margin-top:4px}.admin-user{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.admin-user:last-child{border-bottom:0}.pill{font-size:10px;padding:5px 8px;border-radius:999px;background:#172941;color:#bcd0e8}
 @media(min-width:700px){.modal{align-items:center;padding:20px}.sheet{border-radius:22px;max-height:82vh}}
+
+.match-vs-title{font-size:20px;font-weight:800;text-align:center;margin:4px 0 12px}.team-left{display:flex;align-items:center;gap:10px}.live-scoreline{margin-top:10px;padding:10px 12px;border:1px solid rgba(93,144,255,.45);border-radius:12px;background:rgba(24,61,140,.28);font-weight:700;color:#fff}.commentary-line{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}.commentary-line span{min-width:24px;opacity:.7}.commentary-line b{font-weight:600}
 </style>
 </head>
 <body>
@@ -106,6 +108,7 @@ const JOIN_FEE = 500;
 
 let sb=null, session=null, profile=null, wallet=0, currentTab="LIVE";
 let cache={LIVE:[],UPCOMING:[],COMPLETED:[]};
+let detailCache=new Map();
 
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -270,7 +273,7 @@ function normalize(raw){
   const h=m.first_team||m.home_team||m.team1||m.home||{},a=m.second_team||m.away_team||m.team2||m.away||{};
   const tn=(x,d)=>typeof x==="string"?x:pick(x,["full_name","name","team_name","title"],d);
   const tl=x=>typeof x==="object"?pick(x,["logo","logo_url","image","team_logo"],""):"";
-  return {raw:m,id:pick(m,["match_id","matchId","id"],i),title:pick(m,["match_desc","match_name","title","name"],"Cricket Match"),series:pick(m,["series_name","series","tournament"],""),status:pick(m,["state","status","match_status"],""),start:pick(m,["start_time","startTime","date","match_date","scheduled_at"],""),venue:pick(m,["venue","venue_name","ground"],""),home:{name:tn(h,pick(m,["home_team_name","team1_name"],"Team 1")),logo:tl(h)},away:{name:tn(a,pick(m,["away_team_name","team2_name"],"Team 2")),logo:tl(a)}};
+  return {raw:m,id:pick(m,["match_id","matchId","id"],i),title:pick(m,["match_desc","match_name","title","name"],"Cricket Match"),series:pick(m,["series_name","series","tournament"],""),status:pick(m,["state","status","match_status"],""),start:pick(m,["start_time","startTime","date","match_date","scheduled_at"],""),venue:pick(m,["venue","venue_name","ground"],""),home:{name:tn(h,pick(m,["home_team_name","team1_name"],"Team 1")),logo:tl(h)},away:{name:tn(a,pick(m,["away_team_name","team2_name"],"Team 2")) ,logo:tl(a)},score:pick(m,["score","live_score","current_score","score_text"],""),homeScore:pick(m,["team1_score","home_score","first_team_score"],""),awayScore:pick(m,["team2_score","away_score","second_team_score"],""),overs:pick(m,["overs","current_overs"],""),crr:pick(m,["crr","current_run_rate"],""),rrr:pick(m,["rrr","required_run_rate"],""),lastBall:pick(m,["last_ball","lastBall","latest_ball"],"")};
  });
 }
 function live(m){
@@ -298,6 +301,83 @@ function val(m){
  return (n/100).toFixed(2)+"x";
 }
 function logo(u){return u?`<img src="${esc(u)}" onerror="this.style.display='none'">`:`<div class="team-logo">🏏</div>`}
+function matchName(m){ return `${m.home.name} vs ${m.away.name}`; }
+function scoreText(m, side){
+  const v=side==='home'?m.homeScore:m.awayScore;
+  if(v) return String(v);
+  if(m.score) return String(m.score);
+  return '';
+}
+function liveLine(m){
+  const parts=[];
+  const hs=scoreText(m,'home'), as=scoreText(m,'away');
+  if(hs||as){ if(hs) parts.push(`${m.home.name}: ${hs}`); if(as) parts.push(`${m.away.name}: ${as}`); }
+  if(m.overs) parts.push(`Overs: ${m.overs}`);
+  if(m.crr) parts.push(`CRR: ${m.crr}`);
+  if(m.rrr) parts.push(`RRR: ${m.rrr}`);
+  return parts.join(' • ');
+}
+function findScoreObjects(root, out=[], depth=0){
+  if(depth>7 || root==null) return out;
+  if(Array.isArray(root)){ for(const x of root) findScoreObjects(x,out,depth+1); return out; }
+  if(typeof root!=='object') return out;
+  const hasScore=('score' in root)||('runs' in root)||('wickets' in root)||('overs' in root);
+  if(hasScore) out.push(root);
+  for(const k of Object.keys(root)) findScoreObjects(root[k],out,depth+1);
+  return out;
+}
+function renderScorecardData(raw, m){
+  if(!raw) return '<div class="small">Scorecard data unavailable.</div>';
+  const candidates=findScoreObjects(raw).slice(0,30);
+  let html='';
+  const seen=new Set();
+  for(const x of candidates){
+    const name=pick(x,['team','team_name','name','title','batting_team'],'');
+    const score=pick(x,['score','score_text'],'');
+    const runs=x.runs!==undefined?x.runs:'';
+    const wickets=x.wickets!==undefined?x.wickets:'';
+    const overs=x.overs!==undefined?x.overs:'';
+    const text=[name, score || (runs!=='' ? `${runs}${wickets!==''?'/'+wickets:''}`:'') , overs!==''?`(${overs} ov)`:'' ].filter(Boolean).join(' ');
+    if(!text || seen.has(text)) continue;
+    seen.add(text); html+=`<div class="kv"><span>${esc(name||'Score')}</span><b>${esc(text.replace(name,'').trim()||score||String(runs))}</b></div>`;
+  }
+  if(!html){
+    const data=raw?.data??raw;
+    const topScore=pick(data,['score','score_text','current_score'],'');
+    const topCrr=pick(data,['crr','current_run_rate'],'');
+    const topRrr=pick(data,['rrr','required_run_rate'],'');
+    const topOvers=pick(data,['overs','current_overs'],'');
+    if(topScore||topCrr||topRrr||topOvers){
+      html+=topScore?`<div class="kv"><span>Score</span><b>${esc(topScore)}</b></div>`:'';
+      html+=topOvers?`<div class="kv"><span>Overs</span><b>${esc(topOvers)}</b></div>`:'';
+      html+=topCrr?`<div class="kv"><span>CRR</span><b>${esc(topCrr)}</b></div>`:'';
+      html+=topRrr?`<div class="kv"><span>RRR</span><b>${esc(topRrr)}</b></div>`:'';
+    }
+  }
+  return html || '<div class="small">CricLive ne is match ke liye scorecard fields return nahi kiye.</div>';
+}
+function renderCommentary(raw){
+  if(!raw) return '<div class="small">Commentary unavailable.</div>';
+  let arrs=[];
+  const walk=(v,d=0)=>{ if(d>7||v==null)return; if(Array.isArray(v)){ if(v.length&&v.some(x=>typeof x==='object')) arrs.push(v); v.forEach(x=>walk(x,d+1)); return;} if(typeof v==='object') Object.values(v).forEach(x=>walk(x,d+1)); };
+  walk(raw);
+  let list=arrs.flat().filter(x=>typeof x==='string'||typeof x==='object').slice(-20).reverse();
+  const texts=[]; const seen=new Set();
+  for(const x of list){
+    const t=typeof x==='string'?x:pick(x,['commentary','text','message','description','event','ball'],'');
+    if(t&&!seen.has(t)){seen.add(t);texts.push(t);}
+  }
+  return texts.length?texts.map((t,i)=>`<div class="commentary-line"><span>${i+1}</span><b>${esc(t)}</b></div>`).join(''):'<div class="small">Commentary data unavailable.</div>';
+}
+async function loadDetailsExtras(m){
+  const key=String(m.id);
+  if(detailCache.has(key)) return detailCache.get(key);
+  const p=(async()=>{
+    const [sr,cr]=await Promise.allSettled([getJSON(`/api/cricket/match/${encodeURIComponent(key)}/scorecard`),getJSON(`/api/cricket/match/${encodeURIComponent(key)}/commentary`)]);
+    return {scorecard:sr.status==='fulfilled'?sr.value:null,commentary:cr.status==='fulfilled'?cr.value:null,scorecardError:sr.status==='rejected'?sr.reason?.message:'',commentaryError:cr.status==='rejected'?cr.reason?.message:''};
+  })();
+  detailCache.set(key,p); return p;
+}
 function render(){
  const list=cache[currentTab]||[];
  $("sectionTitle").textContent=currentTab==="LIVE"?"Live Matches":currentTab==="UPCOMING"?"Upcoming Matches":"Completed Matches";
@@ -305,13 +385,28 @@ function render(){
  <article class="match">
   <div class="match-head"><div class="row"><div class="series">${esc(m.series||m.title)}</div><span class="badge ${live(m)?"live":""}">${live(m)?"● LIVE":esc(m.status||"UPCOMING")}</span></div></div>
   <div class="teams">
-   <div class="team">${logo(m.home.logo)}<div class="team-name">${esc(m.home.name)}</div><div class="score"></div></div>
-   <div class="team">${logo(m.away.logo)}<div class="team-name">${esc(m.away.name)}</div><div class="score"></div></div>
+   <div class="match-vs-title">${esc(matchName(m))}</div>
+   <div class="team"><div class="team-left">${logo(m.home.logo)}<div class="team-name">${esc(m.home.name)}</div></div><div class="score">${esc(scoreText(m,'home'))}</div></div>
+   <div class="team"><div class="team-left">${logo(m.away.logo)}<div class="team-name">${esc(m.away.name)}</div></div><div class="score">${esc(scoreText(m,'away'))}</div></div>
    <div class="meta">${esc(m.title)} • ${esc(fmt(m.start))}${m.venue?" • "+esc(m.venue):""}</div>
+   ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score loading…')}</div>`:''}
   </div>
   <div class="valuebar"><div><div class="value-label">KINGS11 VIRTUAL BHAV / GAME VALUE</div><div class="small">Match state ke saath update hota hai • cash value nahi</div></div><div class="value">${val(m)}</div></div>
   <div class="actions"><button class="btn join" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN • 500 VC</button><button class="btn details" onclick="details('${encodeURIComponent(String(m.id))}')">MATCH DETAILS</button></div>
  </article>`).join(""):`<div class="small" style="padding:40px;text-align:center">No ${currentTab.toLowerCase()} matches available.</div>`;
+ if(currentTab==='LIVE') list.forEach(m=>hydrateLiveCard(m));
+}
+async function hydrateLiveCard(m){
+  try{
+    const d=await getJSON(`/api/cricket/match/${encodeURIComponent(String(m.id))}/scorecard`);
+    const data=d?.data??d;
+    const score=pick(data,['score','live_score','current_score','score_text'],'');
+    const crr=pick(data,['crr','current_run_rate'],'');
+    const rrr=pick(data,['rrr','required_run_rate'],'');
+    const overs=pick(data,['overs','current_overs'],'');
+    const line=[score,overs?`Overs: ${overs}`:'',crr?`CRR: ${crr}`:'',rrr?`RRR: ${rrr}`:''].filter(Boolean).join(' • ');
+    const el=$("scoreline-"+String(m.id)); if(el) el.textContent=line||'Live score data unavailable';
+  }catch(e){ const el=$("scoreline-"+String(m.id)); if(el) el.textContent='Live score data unavailable'; }
 }
 async function loadMatches(){
  const controller=new AbortController();
@@ -374,9 +469,18 @@ async function loadMatches(){
  }
 }async function details(enc){
  const m=[...cache.LIVE,...cache.UPCOMING,...cache.COMPLETED].find(x=>String(x.id)===decodeURIComponent(enc));if(!m)return;
- $("modalTitle").textContent=`${m.home.name} vs ${m.away.name}`;
- $("modalBody").innerHTML=`<div class="card"><div class="kv"><span>Series</span><b>${esc(m.series||"-")}</b></div><div class="kv"><span>Status</span><b>${esc(m.status||"-")}</b></div><div class="kv"><span>Start</span><b>${esc(fmt(m.start))}</b></div><div class="kv"><span>Venue</span><b>${esc(m.venue||"-")}</b></div></div><div class="card"><h3>Virtual Game Value</h3><div class="kv"><span>Current index</span><b style="color:var(--gold);font-size:18px">${val(m)}</b></div><div class="notice">This is an in-game virtual index only. It has no cash value and no withdrawal function.</div></div><div class="card"><h3>Entry</h3><div class="kv"><span>Joining fee</span><b>500 VC</b></div><div class="kv"><span>Your balance</span><b>${wallet.toLocaleString("en-IN")} VC</b></div><button class="primary" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN FOR 500 VC</button></div>`;
+ $("modalTitle").textContent=matchName(m);
+ $("modalBody").innerHTML=`
+ <div class="card"><div class="kv"><span>Series</span><b>${esc(m.series||"-")}</b></div><div class="kv"><span>Match</span><b>${esc(m.title||"-")}</b></div><div class="kv"><span>Status</span><b>${esc(m.status||"-")}</b></div><div class="kv"><span>Start</span><b>${esc(fmt(m.start))}</b></div><div class="kv"><span>Venue</span><b>${esc(m.venue||"-")}</b></div></div>
+ <div class="card"><h3>LIVE SCORECARD</h3><div id="scorecardBox"><div class="small">CricLive scorecard load ho raha hai…</div></div></div>
+ <div class="card"><h3>RECENT COMMENTARY</h3><div id="commentaryBox"><div class="small">Commentary load ho rahi hai…</div></div></div>
+ <div class="card"><h3>Virtual Game Value</h3><div class="kv"><span>Current index</span><b style="color:var(--gold);font-size:18px">${val(m)}</b></div><div class="notice">This is an in-game virtual index only. It has no cash value and no withdrawal function.</div></div>
+ <div class="card"><h3>Entry</h3><div class="kv"><span>Joining fee</span><b>500 VC</b></div><div class="kv"><span>Your balance</span><b>${wallet.toLocaleString("en-IN")} VC</b></div><button class="primary" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN FOR 500 VC</button></div>`;
  $("modal").classList.add("show");
+ const d=await loadDetailsExtras(m);
+ const sbx=$("scorecardBox"), cbx=$("commentaryBox");
+ if(sbx) sbx.innerHTML=renderScorecardData(d.scorecard,m)+(d.scorecardError?`<div class="small" style="margin-top:8px">${esc(d.scorecardError)}</div>`:'');
+ if(cbx) cbx.innerHTML=renderCommentary(d.commentary)+(d.commentaryError?`<div class="small" style="margin-top:8px">${esc(d.commentaryError)}</div>`:'');
 }
 async function joinMatch(enc){
  if(!session){openLogin();alert("Match join karne ke liye pehle KINGS11 login kijiye.");return;}
