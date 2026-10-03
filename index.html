@@ -847,6 +847,10 @@ function withinNext7Days(m){
 function mergeAndRebuild(liveList=null, scheduleList=null){
   const map=new Map();
   const history=readHistory();
+  const liveUpdate=Array.isArray(liveList);
+  const scheduleUpdate=Array.isArray(scheduleList);
+  const liveHasData=liveUpdate && liveList.length>0;
+  const scheduleHasData=scheduleUpdate && scheduleList.length>0;
   const put=(m,prefer=false)=>{
     if(!m) return;
     const k=String(m.id);
@@ -854,11 +858,15 @@ function mergeAndRebuild(liveList=null, scheduleList=null){
     if(!old || prefer) map.set(k,m);
   };
 
-  // Current API data is authoritative. Cached/history data is only a fallback
-  // when an endpoint is temporarily unavailable; it never creates a new LIVE
-  // match by itself.
-  (scheduleList||[]).forEach(m=>put(m,false));
-  (liveList||[]).forEach(m=>put(m,true));
+  // IMPORTANT: an empty/temporary LIVE response must never erase the last
+  // successful LIVE snapshot. Only a non-empty LIVE response can replace it.
+  // This is the key protection against LIVE suddenly becoming 0.
+  if(scheduleHasData) scheduleList.forEach(m=>put(m,false));
+  if(liveHasData) liveList.forEach(m=>put(m,true));
+
+  // Keep the last valid UI snapshots as fallback data. They are never treated
+  // as fresh API data; they only prevent a transient empty/error response from
+  // blanking the screen.
   cache.LIVE.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
   cache.UPCOMING.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
   cache.COMPLETED.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
@@ -866,36 +874,50 @@ function mergeAndRebuild(liveList=null, scheduleList=null){
     if(!map.has(String(m.id))) put(m,false);
   });
 
-  rememberMatches(liveList||[],true);
-  rememberMatches(scheduleList||[],false);
+  if(liveHasData) rememberMatches(liveList,true);
+  if(scheduleHasData) rememberMatches(scheduleList,false);
 
   const all=unique([...map.values()]);
-  const liveNow=unique((liveList||[]).filter(live));
+  const liveNow=liveHasData ? unique(liveList.filter(live)) : unique(cache.LIVE.filter(live));
   const liveIds=new Set(liveNow.map(m=>String(m.id)));
 
-  // A scheduled match is finished only when the API explicitly says so,
-  // OR it is in the previous-7-day window and is no longer live.
+  // If the fresh LIVE response is empty, do NOT assume every previous LIVE
+  // match finished. A schedule/status/end-time signal must support completion.
+  // This avoids false COMPLETED/false zero-LIVE states during transient API gaps.
   const explicitDone=all.filter(done);
+  const endedByTime=all.filter(m=>{
+    const e=endMs(m);
+    return Number.isFinite(e) && e<=Date.now() && !liveIds.has(String(m.id));
+  });
   const completed=unique([
     ...explicitDone,
-    ...all.filter(m=>!liveIds.has(String(m.id)) && withinPrevious7Days(m) && !future(m))
+    ...endedByTime,
+    ...all.filter(m=>!liveIds.has(String(m.id)) && withinPrevious7Days(m) && !future(m) && done(m))
   ]).filter(m=>!liveIds.has(String(m.id)));
 
-  // Previous history is used only to retain a match if the schedule endpoint
-  // temporarily omits it. It is still restricted to the previous 7 days.
+  // History is only promoted to COMPLETED when there is evidence that the
+  // match is no longer live: explicit finished state or a known end time.
   for(const old of Object.values(history)){
     const id=String(old.id);
     if(liveIds.has(id)) continue;
     if(!withinPrevious7Days(old)) continue;
-    if(!completed.some(m=>String(m.id)===id)){
-      const copy={...old,status:'Finished',statusDetail:old.statusDetail||'Finished',result:old.result||deriveResult(old)};
-      completed.push(copy);
+    const oldEnd=endMs(old);
+    const oldExplicitDone=done(old);
+    if(oldExplicitDone || (Number.isFinite(oldEnd) && oldEnd<=Date.now())){
+      if(!completed.some(m=>String(m.id)===id)){
+        const copy={...old,status:'Finished',state:'Finished',statusDetail:old.statusDetail||'Finished',result:old.result||deriveResult(old)};
+        completed.push(copy);
+      }
     }
   }
 
   const upcoming=unique(all.filter(m=>!liveIds.has(String(m.id)) && withinNext7Days(m) && !done(m)));
 
-  cache.LIVE=liveNow;
+  // If a non-empty LIVE update arrived, it is authoritative. If it was empty
+  // or failed, retain the previous successful LIVE snapshot.
+  if(liveHasData){
+    cache.LIVE=liveNow;
+  }
   cache.UPCOMING=upcoming;
   cache.COMPLETED=unique(completed).map(m=>({...m,result:m.result||deriveResult(m)}));
 }
@@ -919,23 +941,27 @@ async function loadLiveOnly(force=false){
  try{
    const liveRaw=await fetchCricketPath("/api/cricket/live");
    const liveAll=normalize(liveRaw);
-   mergeAndRebuild(liveAll, null);
-
-   // Save only a useful LIVE snapshot. Empty live responses are deliberately
-   // not saved, so they cannot hide a match for 30 minutes.
    const nextLive=unique(liveAll.filter(live));
+
    if(nextLive.length>0){
+     // Only a non-empty successful LIVE snapshot is allowed to replace the
+     // current LIVE list. This prevents transient empty responses from making
+     // the UI show LIVE = 0.
+     mergeAndRebuild(liveAll, null);
      localStorage.setItem("kings11_last_live", JSON.stringify({ts:Date.now(), data:liveRaw}));
+   }else{
+     // Keep the previous successful LIVE data. Do not overwrite it with [].
+     // Schedule data can still move a match to COMPLETED when there is explicit
+     // finished/end-time evidence.
+     const saved=readStaleSnapshot('live');
+     if(!cache.LIVE.length && saved) applySavedLiveSnapshot();
    }
    liveLoaded=true;
    updateStatus();
    render();
  }catch(e){
-   // Use the last useful snapshot and cached schedule instead of blanking the UI.
-   if(applySavedLiveSnapshot()){
-     updateStatus(); render();
-     return;
-   }
+   // Network/429/Worker failure: preserve current or last successful snapshot.
+   if(!cache.LIVE.length) applySavedLiveSnapshot();
    updateStatus();
    render();
  }
