@@ -436,7 +436,11 @@ const STATIC_TEAM_LOGOS={
   'westindies':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vvn4mghhobtwnb2cv7yi',
   'wi':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vvn4mghhobtwnb2cv7yi',
   'zimbabwe':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vz1jpphfrjvbuowwrrtt',
-  'zim':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vz1jpphfrjvbuowwrrtt'
+  'zim':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vz1jpphfrjvbuowwrrtt',
+  'namibia':'https://api.sofascore.app/api/v1/team/199275/image',
+  'nam':'https://api.sofascore.app/api/v1/team/199275/image',
+  'united arab emirates':'https://api.sofascore.app/api/v1/team/187771/image',
+  'uae':'https://api.sofascore.app/api/v1/team/187771/image'
 };
 function logoKey(name){
  const n=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
@@ -454,6 +458,8 @@ function logoKey(name){
  if(/\bafghanistan\b/.test(n)) return 'afghanistan';
  if(/\bireland\b/.test(n)) return 'ireland';
  if(/\bzimbabwe\b/.test(n)) return 'zimbabwe';
+ if(/\bnamibia\b/.test(n)) return 'namibia';
+ if(/\b(united\s+arab\s+emirates|uae)\b/.test(n)) return 'united arab emirates';
  return '';
 }
 function fallbackTeamLogo(name, rawTeam){
@@ -823,20 +829,24 @@ async function loadCommentaryOnly(m){
 function render(){
  const list=cache[currentTab]||[];
  $("sectionTitle").textContent=currentTab==="LIVE"?"Live Matches":currentTab==="UPCOMING"?"Upcoming Matches":"Completed Matches";
- $("matches").innerHTML=list.length?list.map(m=>`
+ $("matches").innerHTML=list.length?list.map(m=>{
+  const isUpcoming=currentTab==="UPCOMING";
+  const isCompleted=currentTab==="COMPLETED";
+  return `
  <article class="match">
-  <div class="match-head"><div class="row"><div class="series">${esc(m.series||m.title)}</div><span class="badge ${live(m)?"live":""}">${live(m)?"● LIVE":currentTab==="COMPLETED"?"✓ FINISHED":esc(m.status||"UPCOMING")}</span></div></div>
+  <div class="match-head"><div class="row"><div class="series">${esc(m.series||m.title)}</div><span class="badge ${live(m)?"live":""}">${live(m)?"● LIVE":isCompleted?"✓ FINISHED":esc(m.status||"UPCOMING")}</span></div></div>
   <div class="teams">
    <div class="match-vs-title">${esc(matchName(m))}</div>
-   <div class="team"><div>${logo(m.home.logo,m.home.name,m.home.raw)}</div><div class="team-info"><div class="team-name">${esc(m.home.name)}</div>${scoreText(m,'home')?`<div class="score">${esc(scoreText(m,'home'))}</div>`:''}</div></div>
-   <div class="team"><div>${logo(m.away.logo,m.away.name,m.away.raw)}</div><div class="team-info"><div class="team-name">${esc(m.away.name)}</div>${scoreText(m,'away')?`<div class="score">${esc(scoreText(m,'away'))}</div>`:''}</div></div>
+   <div class="team"><div>${logo(m.home.logo,m.home.name,m.home.raw)}</div><div class="team-info"><div class="team-name">${esc(m.home.name)}</div>${!isUpcoming&&scoreText(m,'home')?`<div class="score">${esc(scoreText(m,'home'))}</div>`:''}</div></div>
+   <div class="team"><div>${logo(m.away.logo,m.away.name,m.away.raw)}</div><div class="team-info"><div class="team-name">${esc(m.away.name)}</div>${!isUpcoming&&scoreText(m,'away')?`<div class="score">${esc(scoreText(m,'away'))}</div>`:''}</div></div>
    <div class="meta"><b>📅 ${esc(fmt(m.start))}</b>${m.venue?" • 📍 "+esc(m.venue):""}</div>
    ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score API data me available nahi hai')}</div>`:''}
-   ${currentTab==="COMPLETED" ? `<div class="live-scoreline"><b>RESULT:</b> ${esc(m.result||deriveResult(m)||'Final result API data me available nahi hai')}</div>`:''}
+   ${isCompleted ? `<div class="live-scoreline"><b>RESULT:</b> ${esc(m.result||deriveResult(m)||'Final result API data me available nahi hai')}</div>`:''}
   </div>
-  <div class="valuebar"><div><div class="value-label">KINGS11 VIRTUAL BHAV / GAME VALUE</div><div class="small">Match state ke saath update hota hai • cash value nahi</div></div><div class="value">${val(m)}</div></div>
-  <div class="actions"><button class="btn join" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN • 500 VC</button><button class="btn details" onclick="details('${encodeURIComponent(String(m.id))}')">MATCH DETAILS</button></div>
- </article>`).join(""):`<div class="small" style="padding:40px;text-align:center">No ${currentTab.toLowerCase()} matches available.</div>`;
+  ${isUpcoming||isCompleted ? '' : `<div class="valuebar"><div><div class="value-label">KINGS11 VIRTUAL BHAV / GAME VALUE</div><div class="small">Match state ke saath update hota hai • cash value nahi</div></div><div class="value">${val(m)}</div></div>`}
+  ${isUpcoming||isCompleted ? '' : `<div class="actions"><button class="btn join" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN • 500 VC</button><button class="btn details" onclick="details('${encodeURIComponent(String(m.id))}')">MATCH DETAILS</button></div>`}
+ </article>`;
+ }).join(""):`<div class="small" style="padding:40px;text-align:center">No ${currentTab.toLowerCase()} matches available.</div>`;
 }
 function hydrateLiveCard(m){ /* disabled: prevents automatic API hits */ }
 async function fetchCricketPath(path){
