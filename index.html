@@ -110,6 +110,60 @@ let sb=null, session=null, profile=null, wallet=0, currentTab="LIVE";
 let cache={LIVE:[],UPCOMING:[],COMPLETED:[]};
 let detailCache=new Map();
 
+// HARD SAFETY MODE: assume only 100 CricLive calls remain available.
+// This counter covers requests initiated by this browser only; it never retries automatically.
+const API_BUDGET_KEY="kings11_api_budget_v1";
+const API_BUDGET_MAX=100;
+const ENDPOINT_CACHE_TTL={
+  live: 5*60*1000,
+  schedule: 30*60*1000,
+  scorecard: 24*60*60*1000,
+  commentary: 30*60*1000
+};
+function budgetState(){
+  const now=Date.now();
+  try{
+    const x=JSON.parse(localStorage.getItem(API_BUDGET_KEY)||'null');
+    if(x && Array.isArray(x.hits)){
+      // Rolling 24-hour window: only calls made in the last 24h count.
+      x.hits=x.hits.filter(ts=>Number.isFinite(ts) && now-ts < 24*60*60*1000);
+      x.used=x.hits.length;
+      localStorage.setItem(API_BUDGET_KEY,JSON.stringify(x));
+      return x;
+    }
+  }catch(_){}
+  const x={hits:[],used:0};
+  localStorage.setItem(API_BUDGET_KEY,JSON.stringify(x));
+  return x;
+}
+function endpointKind(path){
+  if(path.includes('/live')) return 'live';
+  if(path.includes('/schedule')) return 'schedule';
+  if(path.includes('/scorecard')) return 'scorecard';
+  if(path.includes('/commentary')) return 'commentary';
+  return 'other';
+}
+function cacheKey(path){return 'kings11_api_cache_v1_'+path;}
+function readEndpointCache(path){
+  try{
+    const x=JSON.parse(localStorage.getItem(cacheKey(path))||'null');
+    const ttl=ENDPOINT_CACHE_TTL[endpointKind(path)]||0;
+    if(x && ttl && Date.now()-x.ts<ttl) return x.data;
+  }catch(_){}
+  return null;
+}
+function writeEndpointCache(path,data){
+  try{localStorage.setItem(cacheKey(path),JSON.stringify({ts:Date.now(),data}));}catch(_){}
+}
+function consumeApiBudget(path){
+  const b=budgetState();
+  if(b.used>=API_BUDGET_MAX) throw Error('KINGS11 safety limit reached: 100 calls in the rolling 24-hour window. No CricLive request will be sent.');
+  b.hits.push(Date.now());
+  b.used=b.hits.length;
+  localStorage.setItem(API_BUDGET_KEY,JSON.stringify(b));
+  return b.used;
+}
+
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const pick=(o,keys,def="")=>{for(const k of keys){const v=o?.[k];if(v!==undefined&&v!==null&&v!=="")return v}return def};
@@ -295,9 +349,29 @@ function normalize(raw){
 
   // IMPORTANT: these values are extracted ONLY from the already-fetched LIVE/SCHEDULE
   // response. This function makes NO API request.
-  const score=deepFirst(m,["score","live_score","current_score","score_text"]);
-  const homeScore=deepFirst(m,["team1_score","home_score","first_team_score"]);
-  const awayScore=deepFirst(m,["team2_score","away_score","second_team_score"]);
+  // CricLive live response can place the current score inside first_team/second_team.
+  // Read those fields directly; this uses the SAME live response and makes NO extra API call.
+  // Read the ACTUAL score attached to each team in the same LIVE response.
+  // Never use the other team's score as a fallback.
+  const teamScore=(team, root, keys)=>{
+    const v=deepFirst(team,["score","live_score","current_score","score_text"]);
+    const r=v!==""&&v!=null?v:deepFirst(root,keys);
+    if(r===undefined||r===null||r==="") return "";
+    if(typeof r==="object") {
+      const runs=deepFirst(r,["runs","run"]);
+      const wickets=deepFirst(r,["wickets","wicket"]);
+      const ov=deepFirst(r,["overs","over"]);
+      if(runs!==""&&runs!=null){
+        let z=String(runs)+(wickets!==""&&wickets!=null?"/"+String(wickets):"");
+        if(ov!==""&&ov!=null) z += " ("+String(ov)+" ov)";
+        return z;
+      }
+    }
+    return String(r).trim();
+  };
+  const score="";
+  const homeScore=teamScore(h,m,["team1_score","home_score","first_team_score"]);
+  const awayScore=teamScore(a,m,["team2_score","away_score","second_team_score"]);
   const overs=deepFirst(m,["overs","current_overs"]);
   const crr=deepFirst(m,["crr","current_run_rate"]);
   const rrr=deepFirst(m,["rrr","required_run_rate"]);
@@ -328,8 +402,14 @@ function done(m){
 function future(m){return !live(m)&&!done(m)}
 function unique(list){ const seen=new Set(); return list.filter(m=>{ const k=String(m.id); if(seen.has(k)) return false; seen.add(k); return true; }); }
 async function getJSON(path){
- const r=await fetch(CRICKET_API+path,{cache:"no-store"}),t=await r.text();let j;try{j=JSON.parse(t)}catch{throw Error("Worker returned non-JSON")}
- if(!r.ok||j.success===false)throw Error(j.error||j.message||("HTTP "+r.status));return j;
+ const cached=readEndpointCache(path);
+ if(cached!==null) return cached;
+ consumeApiBudget(path);
+ const r=await fetch(CRICKET_API+path,{method:"GET",mode:"cors",cache:"no-store",headers:{Accept:"application/json"}});
+ const t=await r.text();let j;try{j=JSON.parse(t)}catch{throw Error("Worker returned non-JSON")}
+ if(!r.ok||j.success===false)throw Error(j.error||j.message||( "HTTP "+r.status));
+ writeEndpointCache(path,j);
+ return j;
 }
 function fmt(v){if(!v)return"-";const d=new Date(v);return Number.isNaN(d.getTime())?v:d.toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
 function val(m){
@@ -345,19 +425,14 @@ function logo(u){return u?`<img src="${esc(u)}" onerror="this.style.display='non
 function matchName(m){ return `${m.home.name} vs ${m.away.name}`; }
 function scoreText(m, side){
   const v=side==='home'?m.homeScore:m.awayScore;
-  if(v) return String(v);
-  if(m.score) return String(m.score);
-  const raw=m.raw||{};
-  const candidates = side==='home'
-    ? ['team1_score','home_score','first_team_score']
-    : ['team2_score','away_score','second_team_score'];
-  const x=pick(raw,candidates,'');
-  return x ? String(x) : '';
+  if(v) return String(v).trim();
+  return '';
 }
 function liveLine(m){
-  const parts=[];
   const hs=scoreText(m,'home'), as=scoreText(m,'away');
-  if(hs||as){ if(hs) parts.push(`${m.home.name}: ${hs}`); if(as) parts.push(`${m.away.name}: ${as}`); }
+  const parts=[];
+  if(hs) parts.push(`${m.home.name}: ${hs}`);
+  if(as) parts.push(`${m.away.name}: ${as}`);
   if(m.overs) parts.push(`Overs: ${m.overs}`);
   if(m.crr) parts.push(`CRR: ${m.crr}`);
   if(m.rrr) parts.push(`RRR: ${m.rrr}`);
@@ -496,32 +571,29 @@ function renderCommentary(raw){
   walk(root);
   return texts.slice(-20).reverse().map((t,i)=>`<div class="commentary-line"><span>${i+1}</span><b>${esc(t)}</b></div>`).join('') || '<div class="small">Commentary data unavailable.</div>';
 }
-async function loadDetailsExtras(m){
-  const key=String(m.id);
-  if(detailCache.has(key)) return detailCache.get(key);
-  const p=(async()=>{
-    const [sr,cr]=await Promise.allSettled([
-      getJSON(`/api/cricket/match/${encodeURIComponent(key)}/scorecard`),
-      getJSON(`/api/cricket/match/${encodeURIComponent(key)}/commentary`)
-    ]);
-    return {
-      scorecard:sr.status==='fulfilled'?sr.value:null,
-      commentary:cr.status==='fulfilled'?cr.value:null,
-      scorecardError:sr.status==='rejected'?sr.reason?.message:'',
-      commentaryError:cr.status==='rejected'?cr.reason?.message:''
-    };
-  })();
-  detailCache.set(key,p); return p;
+async function loadScorecardOnly(m){
+ const key=String(m.id);
+ const path=`/api/cricket/match/${encodeURIComponent(key)}/scorecard`;
+ const cached=readEndpointCache(path);
+ if(cached!==null) return {scorecard:cached,scorecardError:''};
+ try{
+   return {scorecard:await getJSON(path),scorecardError:''};
+ }catch(e){
+   return {scorecard:null,scorecardError:e?.message||String(e)};
+ }
 }
-async function loadDetailsExtras(m){
-  const key=String(m.id);
-  if(detailCache.has(key)) return detailCache.get(key);
-  const p=(async()=>{
-    const [sr,cr]=await Promise.allSettled([getJSON(`/api/cricket/match/${encodeURIComponent(key)}/scorecard`),getJSON(`/api/cricket/match/${encodeURIComponent(key)}/commentary`)]);
-    return {scorecard:sr.status==='fulfilled'?sr.value:null,commentary:cr.status==='fulfilled'?cr.value:null,scorecardError:sr.status==='rejected'?sr.reason?.message:'',commentaryError:cr.status==='rejected'?cr.reason?.message:''};
-  })();
-  detailCache.set(key,p); return p;
+async function loadCommentaryOnly(m){
+ const key=String(m.id);
+ const path=`/api/cricket/match/${encodeURIComponent(key)}/commentary`;
+ const cached=readEndpointCache(path);
+ if(cached!==null) return {commentary:cached,commentaryError:''};
+ try{
+   return {commentary:await getJSON(path),commentaryError:''};
+ }catch(e){
+   return {commentary:null,commentaryError:e?.message||String(e)};
+ }
 }
+
 function render(){
  const list=cache[currentTab]||[];
  $("sectionTitle").textContent=currentTab==="LIVE"?"Live Matches":currentTab==="UPCOMING"?"Upcoming Matches":"Completed Matches";
@@ -530,8 +602,8 @@ function render(){
   <div class="match-head"><div class="row"><div class="series">${esc(m.series||m.title)}</div><span class="badge ${live(m)?"live":""}">${live(m)?"● LIVE":esc(m.status||"UPCOMING")}</span></div></div>
   <div class="teams">
    <div class="match-vs-title">${esc(matchName(m))}</div>
-   <div class="team"><div class="team-left">${logo(m.home.logo)}<div class="team-name">${esc(m.home.name)}</div></div><div class="score">${esc(scoreText(m,'home'))}</div></div>
-   <div class="team"><div class="team-left">${logo(m.away.logo)}<div class="team-name">${esc(m.away.name)}</div></div><div class="score">${esc(scoreText(m,'away'))}</div></div>
+   <div class="team"><div class="team-left">${logo(m.home.logo)}<div class="team-name">${esc(m.home.name)}</div></div><div class="score">${live(m)?'':esc(scoreText(m,'home'))}</div></div>
+   <div class="team"><div class="team-left">${logo(m.away.logo)}<div class="team-name">${esc(m.away.name)}</div></div><div class="score">${live(m)?'':esc(scoreText(m,'away'))}</div></div>
    <div class="meta">${esc(m.title)} • ${esc(fmt(m.start))}${m.venue?" • "+esc(m.venue):""}</div>
    ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score fields LIVE feed me available nahi hain')}</div>`:''}
   </div>
@@ -543,19 +615,24 @@ function render(){
 }
 function hydrateLiveCard(m){ /* disabled: prevents automatic API hits */ }
 async function fetchCricketPath(path){
+ const cached=readEndpointCache(path);
+ if(cached!==null) return cached;
+ consumeApiBudget(path);
  const r=await fetch(CRICKET_API+path,{method:"GET",mode:"cors",cache:"no-store",headers:{Accept:"application/json"}});
  const text=await r.text();
  if(!r.ok) throw Error(`${path}: HTTP ${r.status}`);
  let j; try{j=JSON.parse(text)}catch{throw Error(`${path}: Worker response JSON nahi hai`)}
  if(j?.success===false) throw Error(`${path}: ${j.error||j.message||"success:false"}`);
+ writeEndpointCache(path,j);
  return j;
 }
 
 let liveLoaded=false, scheduleLoaded=false, scheduleLoading=null;
 
 function updateStatus(){
+ const b=budgetState();
  $("status").textContent=
-   `CricLive • ${cache.LIVE.length} LIVE • ${cache.UPCOMING.length} UPCOMING • ${cache.COMPLETED.length} FINISHED`;
+   `CricLive • ${cache.LIVE.length} LIVE • ${cache.UPCOMING.length} UPCOMING • ${cache.COMPLETED.length} FINISHED • API guard ${b.used}/${API_BUDGET_MAX}`;
  $("lastUpdated").textContent="Updated "+new Date().toLocaleTimeString("en-IN");
 }
 
@@ -654,16 +731,26 @@ async function details(enc){
  $("modalBody").innerHTML=`
  <div class="card"><div class="kv"><span>Series</span><b>${esc(m.series||"-")}</b></div><div class="kv"><span>Match</span><b>${esc(m.title||"-")}</b></div><div class="kv"><span>Status</span><b>${esc(m.status||"-")}</b></div><div class="kv"><span>Start</span><b>${esc(fmt(m.start))}</b></div><div class="kv"><span>Venue</span><b>${esc(m.venue||"-")}</b></div></div>
  <div class="card"><h3>LIVE SCORECARD</h3><div id="scorecardBox"><div class="small">CricLive scorecard load ho raha hai…</div></div></div>
- <div class="card"><h3>RECENT COMMENTARY</h3><div id="commentaryBox"><div class="small">Commentary load ho rahi hai…</div></div></div>
+ <div class="card"><h3>RECENT COMMENTARY</h3><div id="commentaryBox"><div class="small">Commentary abhi load nahi ki gayi — API hit bachane ke liye.</div></div><button class="secondary" id="loadCommentaryBtn" onclick="loadCommentaryFromDetails('${encodeURIComponent(String(m.id))}')">LOAD COMMENTARY • 1 API HIT</button></div>
  <div class="card"><h3>Virtual Game Value</h3><div class="kv"><span>Current index</span><b style="color:var(--gold);font-size:18px">${val(m)}</b></div><div class="notice">This is an in-game virtual index only. It has no cash value and no withdrawal function.</div></div>
  <div class="card"><h3>Entry</h3><div class="kv"><span>Joining fee</span><b>500 VC</b></div><div class="kv"><span>Your balance</span><b>${wallet.toLocaleString("en-IN")} VC</b></div><button class="primary" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN FOR 500 VC</button></div>`;
  $("modal").classList.add("show");
- // STRICT API RULE: scorecard + commentary are requested ONLY for this clicked match ID, after MATCH DETAILS is opened. Never preload another match.
- const d=await loadDetailsExtras(m);
- const sbx=$("scorecardBox"), cbx=$("commentaryBox");
+ // STRICT API RULE: opening Match Details spends at most ONE provider hit: scorecard only.
+ // Commentary is a separate explicit button and is never prefetched.
+ const d=await loadScorecardOnly(m);
+ const sbx=$("scorecardBox");
  if(sbx) sbx.innerHTML=renderScorecardData(d.scorecard,m)+(d.scorecardError?`<div class="small" style="margin-top:8px">${esc(d.scorecardError)}</div>`:'');
- if(cbx) cbx.innerHTML=renderCommentary(d.commentary)+(d.commentaryError?`<div class="small" style="margin-top:8px">${esc(d.commentaryError)}</div>`:'');
 }
+async function loadCommentaryFromDetails(enc){
+ const m=[...cache.LIVE,...cache.UPCOMING,...cache.COMPLETED].find(x=>String(x.id)===decodeURIComponent(enc));
+ if(!m) return;
+ const btn=$("loadCommentaryBtn"), box=$("commentaryBox");
+ if(btn) {btn.disabled=true;btn.textContent="LOADING COMMENTARY…";}
+ const d=await loadCommentaryOnly(m);
+ if(box) box.innerHTML=renderCommentary(d.commentary)+(d.commentaryError?`<div class="small" style="margin-top:8px">${esc(d.commentaryError)}</div>`:'');
+ if(btn) {btn.disabled=false;btn.textContent=d.commentary?"COMMENTARY LOADED":"LOAD COMMENTARY • 1 API HIT";}
+}
+
 async function joinMatch(enc){
  if(!session){openLogin();alert("Match join karne ke liye pehle KINGS11 login kijiye.");return;}
  const id=decodeURIComponent(enc);
