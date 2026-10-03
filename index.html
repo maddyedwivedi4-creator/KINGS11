@@ -143,7 +143,7 @@ function endpointKind(path){
   if(path.includes('/commentary')) return 'commentary';
   return 'other';
 }
-function cacheKey(path){return 'kings11_api_cache_v1_'+path;}
+function cacheKey(path){return 'kings11_api_cache_v3_'+path;}
 function readEndpointCache(path){
   try{
     const x=JSON.parse(localStorage.getItem(cacheKey(path))||'null');
@@ -307,8 +307,9 @@ function isMatchObject(x){
                  (x.home_team!=null && x.away_team!=null) ||
                  (x.team1!=null && x.team2!=null) ||
                  (x.home!=null && x.away!=null) ||
-                 (x.firstTeam!=null && x.secondTeam!=null);
- return (hasId && hasPair) || (hasPair && (x.match_desc!=null || x.title!=null || x.series_name!=null || x.status!=null || x.state!=null));
+                 (x.firstTeam!=null && x.secondTeam!=null) ||
+                 (x.team_1!=null && x.team_2!=null);
+ return (hasId && hasPair) || (hasPair && (x.match_desc!=null || x.match_name!=null || x.title!=null || x.series_name!=null || x.status!=null || x.state!=null || x.date!=null));
 }
 function collectMatches(root, out=[], seen=new Set(), depth=0){
  if(depth>10 || root==null) return out;
@@ -400,6 +401,10 @@ function normalize(raw){
   };
   const status=scalarText(pick(m,['status','state','match_status','short_status','status_detail'],''),'');
   const statusDetail=scalarText(pick(m,['status_detail','statusDetail','short_status','result','result_text','winner','winning_team'],''),'');
+  const rawStart = scalarText(pick(m,['start_time','startTime','date','match_date','scheduled_at','startDateTime','start_datetime','match_datetime','datetime','date_time','scheduled_start','start','match_start_time','match_start_datetime','start_date_time'],''),'') || scalarText(deepFirst(m,['start_time','startTime','date','match_date','scheduled_at','startDateTime','start_datetime','match_datetime','datetime','date_time','scheduled_start','start','match_start_time','match_start_datetime','start_date_time'],8),'');
+  const separateDate = scalarText(pick(m,['start_date','match_start_date','scheduled_date'],''),'');
+  const separateTime = scalarText(pick(m,['start_clock','match_start_time_text','scheduled_time','start_time_text'],''),'');
+  const startValue = rawStart || ([separateDate,separateTime].filter(Boolean).join(' '));
   return {
     raw:m,
     id:pick(m,['match_id','matchId','id'],i),
@@ -408,7 +413,7 @@ function normalize(raw){
     status,
     statusDetail,
     result:scalarText(pick(m,['result','result_text','winner','winning_team','status_detail','short_status'],''),''),
-    start:scalarText(pick(m,['start_time','startTime','date','match_date','scheduled_at','startDateTime'],''),''),
+    start:startValue,
     venue:scalarText(pick(m,['venue','venue_name','ground'],'') ,''),
     home:{name:teamName(h,scalarText(pick(m,['home_team_name','team1_name','first_team_name'],'Team 1'),'Team 1')),logo:teamLogo(h)},
     away:{name:teamName(a,scalarText(pick(m,['away_team_name','team2_name','second_team_name'],'Team 2'),'Team 2')),logo:teamLogo(a)},
@@ -430,7 +435,31 @@ function done(m){
  const s=[m.status,m.statusDetail,m.result,m.raw?.state,m.raw?.status,m.raw?.short_status,m.raw?.status_detail].map(x=>String(x??'').toLowerCase()).join(' | ');
  return s.includes('complete')||s.includes('completed')||s.includes('finished')||s.includes('result')||s.includes('ended')||s.includes('abandoned')||s.includes('cancelled')||s.includes('canceled')||s.includes('no result')||s.includes('won by')||s.includes('draw')||s.includes('tie');
 }
-function future(m){return !live(m)&&!done(m)}
+function startMs(m){
+  const v=m?.start;
+  if(!v) return NaN;
+  if(typeof v==='number') return v<100000000000? v*1000 : v;
+  const text=String(v).trim();
+  let t=Date.parse(text);
+  if(Number.isFinite(t)) return t;
+  // Some feeds omit the year/timezone. Try the current year without changing the source text.
+  const year=new Date().getFullYear();
+  t=Date.parse(`${text} ${year}`);
+  return Number.isFinite(t)?t:NaN;
+}
+function startedCandidate(m){
+  if(live(m)||done(m)) return false;
+  const t=startMs(m);
+  if(!Number.isFinite(t)) return false;
+  const now=Date.now();
+  return t <= now && now-t <= 6*60*60*1000;
+}
+function future(m){
+  if(live(m)||done(m)) return false;
+  const t=startMs(m);
+  if(Number.isFinite(t)) return t> Date.now();
+  return !startedCandidate(m);
+}
 function unique(list){ const seen=new Set(); return list.filter(m=>{ const k=String(m.id); if(seen.has(k)) return false; seen.add(k); return true; }); }
 async function getJSON(path){
  const cached=readEndpointCache(path);
@@ -442,7 +471,14 @@ async function getJSON(path){
  writeEndpointCache(path,j);
  return j;
 }
-function fmt(v){if(!v)return"-";const d=new Date(v);return Number.isNaN(d.getTime())?v:d.toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
+function fmt(v){
+ if(v===undefined||v===null||v==='') return '-';
+ const raw=String(v).trim();
+ let d=new Date(raw);
+ if(Number.isNaN(d.getTime())){ const y=new Date().getFullYear(); d=new Date(`${raw} ${y}`); }
+ if(Number.isNaN(d.getTime())) return raw;
+ return d.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'Asia/Kolkata'})+' IST';
+}
 function val(m){
  // Virtual game index only; it has no cash value and is not a payout/withdrawal quote.
  const s=String(m.status).toLowerCase();
@@ -634,7 +670,7 @@ function render(){
    <div class="match-vs-title">${esc(matchName(m))}</div>
    <div class="team"><div class="team-left">${logo(m.home.logo)}<div class="team-name">${esc(m.home.name)}</div></div><div class="score">${live(m)?'':esc(scoreText(m,'home'))}</div></div>
    <div class="team"><div class="team-left">${logo(m.away.logo)}<div class="team-name">${esc(m.away.name)}</div></div><div class="score">${live(m)?'':esc(scoreText(m,'away'))}</div></div>
-   <div class="meta">${esc(m.title)} • ${esc(fmt(m.start))}${m.venue?" • "+esc(m.venue):""}</div>
+   <div class="meta"><b>📅 ${esc(fmt(m.start))}</b>${m.venue?" • 📍 "+esc(m.venue):""}</div>
    ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score fields LIVE feed me available nahi hain')}</div>`:''}
    ${currentTab==="COMPLETED" && m.result?`<div class="live-scoreline"><b>RESULT:</b> ${esc(m.result)}</div>`:''}
   </div>
@@ -653,7 +689,11 @@ async function fetchCricketPath(path){
  if(!r.ok) throw Error(`${path}: HTTP ${r.status}`);
  let j; try{j=JSON.parse(text)}catch{throw Error(`${path}: Worker response JSON nahi hai`)}
  if(j?.success===false) throw Error(`${path}: ${j.error||j.message||"success:false"}`);
- writeEndpointCache(path,j);
+
+ // Never turn a temporary empty live/schedule response into a 30-minute
+ // cache. A real successful response containing matches is cached normally.
+ const n=arr(j).length;
+ if(n>0 || (!path.includes('/live') && !path.includes('/schedule'))) writeEndpointCache(path,j);
  return j;
 }
 
@@ -670,7 +710,7 @@ function applySavedLiveSnapshot(){
   const saved=readStaleSnapshot('live');
   if(!saved) return false;
   const liveAll=normalize(saved);
-  cache.LIVE=unique(liveAll.filter(live));
+  mergeAndRebuild(liveAll, null);
   liveLoaded=true;
   return true;
 }
@@ -678,13 +718,46 @@ function applySavedScheduleSnapshot(){
   const saved=readStaleSnapshot('schedule');
   if(!saved) return false;
   const schedule=normalize(saved);
-  const list=unique(schedule);
-  cache.UPCOMING=unique(list.filter(future));
-  cache.COMPLETED=unique(list.filter(done));
+  mergeAndRebuild(null, schedule);
   scheduleLoaded=true;
   return true;
 }
+function mergeAndRebuild(liveList=null, scheduleList=null){
+  const map=new Map();
+  const put=(m, prefer=false)=>{
+    if(!m) return;
+    const k=String(m.id);
+    const old=map.get(k);
+    if(!old || prefer) map.set(k,m);
+  };
+  (scheduleList||[]).forEach(m=>put(m,false));
+  (liveList||[]).forEach(m=>put(m,true));
 
+  // Preserve the last useful live objects while a temporary live response is
+  // empty, but let an explicit completed result from schedule win.
+  cache.LIVE.forEach(m=>{
+    if(!map.has(String(m.id))) put(m,false);
+  });
+
+  const all=unique([...map.values()]);
+  const liveNow=all.filter(live);
+  const completed=all.filter(done);
+  const transition=all.filter(m=>!live(m)&&!done(m)&&startedCandidate(m));
+
+  // Do not let a transient empty live response erase useful live matches.
+  // If a match has just started according to the cached schedule, expose it
+  // in LIVE until the live endpoint supplies its actual score.
+  cache.LIVE=unique(liveNow.length?liveNow:transition.length?transition:cache.LIVE.filter(m=>!done(m)));
+
+  // Schedule remains the source of truth for upcoming/finished. Matches that
+  // have just started are removed from UPCOMING to avoid showing them twice.
+  cache.UPCOMING=unique(all.filter(m=>future(m)));
+  cache.COMPLETED=unique(completed);
+
+  // If a match was previously LIVE and now has an explicit finished result,
+  // keep it in FINISHED even if the current live feed no longer contains it.
+  cache.LIVE=cache.LIVE.filter(m=>!done(m));
+}
 function updateStatus(){
  const b=budgetState();
  $("status").textContent=
@@ -693,74 +766,67 @@ function updateStatus(){
 }
 
 async function refreshLiveNow(){
-  // Refresh never clears the currently displayed data.
-  // Fresh 30-minute cache => zero API hits.
-  // If a new response is empty/bad, keep the last useful snapshot.
+  // Manual refresh respects the 30-minute endpoint cache. It never clears
+  // currently displayed data. A fresh request is made only after the cache TTL.
   await Promise.allSettled([loadLiveOnly(true), loadScheduleOnly(true)]);
+  updateStatus();
+  render();
 }
 
 async function loadLiveOnly(force=false){
- if(liveLoaded && !force) return;
- $("status").textContent="CricLive • LIVE data loading…";
- $("matches").innerHTML='<div class="small">Loading LIVE matches…</div>';
+ if(liveLoaded && !force) { render(); return; }
  try{
    const liveRaw=await fetchCricketPath("/api/cricket/live");
    const liveAll=normalize(liveRaw);
+   mergeAndRebuild(liveAll, null);
+
+   // Save only a useful LIVE snapshot. Empty live responses are deliberately
+   // not saved, so they cannot hide a match for 30 minutes.
    const nextLive=unique(liveAll.filter(live));
-   if(nextLive.length>0 || cache.LIVE.length===0){
-     cache.LIVE=nextLive;
-     // Only save a non-empty successful LIVE snapshot, so a transient empty
-     // response cannot wipe useful match data.
-     if(nextLive.length>0) localStorage.setItem("kings11_last_live", JSON.stringify({ts:Date.now(), data:liveRaw}));
+   if(nextLive.length>0){
+     localStorage.setItem("kings11_last_live", JSON.stringify({ts:Date.now(), data:liveRaw}));
    }
    liveLoaded=true;
    updateStatus();
-   render(); }catch(e){
-   // Never retry. If the upstream is unavailable (429/5xx/network), show the
-   // last successful snapshot instead of making another hit.
+   render();
+ }catch(e){
+   // Use the last useful snapshot and cached schedule instead of blanking the UI.
    if(applySavedLiveSnapshot()){
-     updateStatus();
-     render();
-     $("status").textContent=`CricLive • LIVE snapshot (${new Date().toLocaleTimeString("en-IN")}) • fresh request failed: ${esc(e.message||String(e))}`;
+     updateStatus(); render();
      return;
    }
-   $("status").textContent="KINGS11 — LIVE request failed";
-   $("matches").innerHTML=`<div class="card"><h3>Exact problem</h3><div class="small">${esc(e.message||String(e))}</div></div>`;
+   updateStatus();
+   render();
  }
 }
 
 async function loadScheduleOnly(force=false){
- if(scheduleLoaded && !force) return;
+ if(scheduleLoaded && !force) { render(); return; }
  if(scheduleLoading) return scheduleLoading;
 
  scheduleLoading=(async()=>{
-   $("status").textContent="CricLive • schedule loading…";
-   $("matches").innerHTML='<div class="small">Loading UPCOMING / COMPLETED matches…</div>';
    try{
      const scheduleRaw=await fetchCricketPath("/api/cricket/schedule");
      const schedule=normalize(scheduleRaw);
      const list=unique(schedule);
 
      // Never erase a useful schedule with an empty upstream response.
-     if(list.length>0 || (cache.UPCOMING.length===0 && cache.COMPLETED.length===0)){
-       cache.UPCOMING=list.filter(future);
-       cache.COMPLETED=list.filter(done);
-       if(list.length>0) localStorage.setItem("kings11_last_schedule", JSON.stringify({ts:Date.now(), data:scheduleRaw}));
+     if(list.length>0){
+       mergeAndRebuild(null, list);
+       localStorage.setItem("kings11_last_schedule", JSON.stringify({ts:Date.now(), data:scheduleRaw}));
+     }else{
+       applySavedScheduleSnapshot();
      }
      scheduleLoaded=true;
      updateStatus();
-     render(); }catch(e){
-     // Never retry. Show the last successful schedule snapshot if available,
-     // even when it is older than 30 minutes, so a temporary 5xx cannot blank
-     // the UPCOMING/COMPLETED tabs.
+     render();
+   }catch(e){
      if(applySavedScheduleSnapshot()){
-       updateStatus();
-       render();
-       $("status").textContent=`CricLive • saved schedule snapshot • fresh request failed: ${esc(e.message||String(e))}`;
+       updateStatus(); render();
        return;
      }
-     $("status").textContent="KINGS11 — schedule request failed";
-     $("matches").innerHTML=`<div class="card"><h3>Exact problem</h3><div class="small">${esc(e.message||String(e))}</div></div>`;
+     updateStatus();
+     render();
    }finally{
      scheduleLoading=null;
    }
@@ -769,10 +835,10 @@ async function loadScheduleOnly(force=false){
  return scheduleLoading;
 }
 
+// Initial page loads LIVE + SCHEDULE once. Both endpoints are cached for
+// 30 minutes, so reloads/tab changes during that window make zero API hits.
 async function loadMatches(){
- // Initial page loads LIVE + SCHEDULE once. Both endpoints are cached for
- // 30 minutes, so reloads/tab changes during that window make zero API hits.
- await Promise.allSettled([loadLiveOnly(), loadScheduleOnly()]);
+  await Promise.allSettled([loadLiveOnly(), loadScheduleOnly()]);
 }
 
 async function details(enc){
