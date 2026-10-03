@@ -78,7 +78,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,13,24,.95);backdrop-fi
 </nav>
 <main class="content">
   <div id="status" class="status">Connecting to KINGS11 cricket server…</div>
-  <div class="title-row"><h2 id="sectionTitle">Live Matches</h2><span id="lastUpdated" class="small"></span></div>
+  <div class="title-row"><h2 id="sectionTitle">Live Matches</h2><div style="display:flex;align-items:center;gap:8px"><span id="lastUpdated" class="small"></span><button class="btn secondary" style="padding:7px 10px;font-size:11px" onclick="refreshLiveNow()">REFRESH LIVE</button></div></div>
   <div id="matches"><div class="small">Loading LIVE / UPCOMING / COMPLETED matches…</div></div>
 </main>
 </div>
@@ -433,7 +433,6 @@ function liveLine(m){
   const parts=[];
   if(hs) parts.push(`${m.home.name}: ${hs}`);
   if(as) parts.push(`${m.away.name}: ${as}`);
-  if(m.overs) parts.push(`Overs: ${m.overs}`);
   if(m.crr) parts.push(`CRR: ${m.crr}`);
   if(m.rrr) parts.push(`RRR: ${m.rrr}`);
   return parts.join(' • ');
@@ -634,6 +633,13 @@ function updateStatus(){
  $("status").textContent=
    `CricLive • ${cache.LIVE.length} LIVE • ${cache.UPCOMING.length} UPCOMING • ${cache.COMPLETED.length} FINISHED • API guard ${b.used}/${API_BUDGET_MAX}`;
  $("lastUpdated").textContent="Updated "+new Date().toLocaleTimeString("en-IN");
+}
+
+async function refreshLiveNow(){
+  // User-triggered refresh only: one LIVE API call when the 5-minute LIVE cache is cleared.
+  liveLoaded=false;
+  try{ localStorage.removeItem(cacheKey("/api/cricket/live")); }catch(_){}
+  await loadLiveOnly();
 }
 
 async function loadLiveOnly(){
