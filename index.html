@@ -437,10 +437,16 @@ const STATIC_TEAM_LOGOS={
   'wi':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vvn4mghhobtwnb2cv7yi',
   'zimbabwe':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vz1jpphfrjvbuowwrrtt',
   'zim':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vz1jpphfrjvbuowwrrtt',
-  'namibia':'https://api.sofascore.app/api/v1/team/199275/image',
-  'nam':'https://api.sofascore.app/api/v1/team/199275/image',
-  'united arab emirates':'https://api.sofascore.app/api/v1/team/187771/image',
-  'uae':'https://api.sofascore.app/api/v1/team/187771/image'
+  // Associate-team logos (static image URLs; no CricLive API hit).
+  'namibia':'https://pbs.twimg.com/profile_images/1252517497703673857/Cesggr9j_400x400.jpg',
+  'nam':'https://pbs.twimg.com/profile_images/1252517497703673857/Cesggr9j_400x400.jpg',
+  'united arab emirates':'https://d32qys9a6wm9no.cloudfront.net/images/sports/07151d742db.png?t=1769403300',
+  'uae':'https://d32qys9a6wm9no.cloudfront.net/images/sports/07151d742db.png?t=1769403300',
+  'indonesia':'https://emergingcricket.com/my_content/uploads/2020/10/Indonesia-logo.jpg',
+  'ina':'https://emergingcricket.com/my_content/uploads/2020/10/Indonesia-logo.jpg',
+  'south korea':'https://flagcdn.com/w160/kr.png',
+  'korea':'https://flagcdn.com/w160/kr.png',
+  'sk':'https://flagcdn.com/w160/kr.png'
 };
 function logoKey(name){
  const n=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
@@ -467,7 +473,22 @@ function fallbackTeamLogo(name, rawTeam){
  const fu=typeof flag==='string' && (/^https?:\/\//i.test(flag.trim())||flag.trim().startsWith('//')) ? (flag.trim().startsWith('//')?'https:'+flag.trim():flag.trim()) : '';
  if(fu) return fu;
  const key=logoKey(name);
- return key ? STATIC_TEAM_LOGOS[key] : '';
+ if(key && STATIC_TEAM_LOGOS[key]) return STATIC_TEAM_LOGOS[key];
+ // Last-resort visual fallback for associate/domestic teams: country flag.
+ // This is a static image request, not a CricLive API request.
+ const n=String(name||'').toLowerCase();
+ const countryCodes={
+   'namibia':'na','united arab emirates':'ae','uae':'ae','south korea':'kr','korea':'kr',
+   'indonesia':'id','south africa':'za','new zealand':'nz','west indies':'jm',
+   'sri lanka':'lk','bangladesh':'bd','pakistan':'pk','india':'in','australia':'au',
+   'england':'gb-eng','ireland':'ie','afghanistan':'af','zimbabwe':'zw',
+   'nepal':'np','oman':'om','canada':'ca','usa':'us','united states':'us',
+   'scotland':'gb-sct','netherlands':'nl','uganda':'ug','tanzania':'tz',
+   'hong kong':'hk','japan':'jp','fiji':'fj','papua new guinea':'pg',
+   'cook islands':'ck','vanuatu':'vu'
+ };
+ const code=Object.keys(countryCodes).find(k=>n===k||n.includes(k));
+ return code ? `https://flagcdn.com/w160/${countryCodes[code]}.png` : '';
 }
 function scalarText(v, fallback=''){
  if(v===undefined||v===null||v==='') return fallback;
@@ -936,6 +957,7 @@ function mergeAndRebuild(liveList=null, scheduleList=null){
   const scheduleUpdate=Array.isArray(scheduleList);
   const liveHasData=liveUpdate && liveList.length>0;
   const scheduleHasData=scheduleUpdate && scheduleList.length>0;
+
   const put=(m,prefer=false)=>{
     if(!m) return;
     const k=String(m.id);
@@ -943,45 +965,73 @@ function mergeAndRebuild(liveList=null, scheduleList=null){
     if(!old || prefer) map.set(k,m);
   };
 
-  // IMPORTANT: an empty/temporary LIVE response must never erase the last
-  // successful LIVE snapshot. Only a non-empty LIVE response can replace it.
-  // This is the key protection against LIVE suddenly becoming 0.
+  // Fresh non-empty API data is authoritative. Empty/failed responses never
+  // erase a previously successful snapshot.
   if(scheduleHasData) scheduleList.forEach(m=>put(m,false));
   if(liveHasData) liveList.forEach(m=>put(m,true));
 
-  // Keep the last valid UI snapshots as fallback data. They are never treated
-  // as fresh API data; they only prevent a transient empty/error response from
-  // blanking the screen.
+  // Preserve the already displayed successful snapshots and persistent history.
   cache.LIVE.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
   cache.UPCOMING.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
   cache.COMPLETED.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
-  Object.values(history).forEach(m=>{
-    if(!map.has(String(m.id))) put(m,false);
-  });
+  Object.values(history).forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
 
   if(liveHasData) rememberMatches(liveList,true);
   if(scheduleHasData) rememberMatches(scheduleList,false);
 
   const all=unique([...map.values()]);
-  const liveNow=liveHasData ? unique(liveList.filter(live)) : unique(cache.LIVE.filter(live));
+  const liveNow=liveHasData
+    ? unique(liveList.filter(live))
+    : unique(cache.LIVE.filter(live));
   const liveIds=new Set(liveNow.map(m=>String(m.id)));
 
-  // If the fresh LIVE response is empty, do NOT assume every previous LIVE
-  // match finished. A schedule/status/end-time signal must support completion.
-  // This avoids false COMPLETED/false zero-LIVE states during transient API gaps.
+  // A completed match is supported by explicit API status/result, a known
+  // end-time, or (when a fresh non-empty LIVE snapshot is authoritative)
+  // disappearance of a match that was previously known to be LIVE.
   const explicitDone=all.filter(done);
   const endedByTime=all.filter(m=>{
     const e=endMs(m);
     return Number.isFinite(e) && e<=Date.now() && !liveIds.has(String(m.id));
   });
+
   const completed=unique([
     ...explicitDone,
-    ...endedByTime,
-    ...all.filter(m=>!liveIds.has(String(m.id)) && withinPrevious7Days(m) && !future(m) && done(m))
+    ...endedByTime
   ]).filter(m=>!liveIds.has(String(m.id)));
 
-  // History is only promoted to COMPLETED when there is evidence that the
-  // match is no longer live: explicit finished state or a known end time.
+  if(liveHasData){
+    for(const old of Object.values(history)){
+      const id=String(old.id);
+      if(liveIds.has(id) || !old.wasLive) continue;
+      if(future(old)) continue;
+
+      const oldEnd=endMs(old);
+      const oldExplicitDone=done(old);
+      const age=Date.now()-startMs(old);
+
+      // If the authoritative LIVE snapshot no longer contains a previously
+      // live match, treat it as finished when the API also has a known end
+      // time/result OR it has been running long enough that disappearance is
+      // a credible finish signal. This prevents a live match from lingering
+      // forever in LIVE after the API moves it out.
+      if(oldExplicitDone || (Number.isFinite(oldEnd)&&oldEnd<=Date.now()) ||
+         (Number.isFinite(age)&&age>=6*60*60*1000)){
+        if(!completed.some(m=>String(m.id)===id)){
+          const copy={
+            ...old,
+            status:'Finished',
+            state:'Finished',
+            statusDetail:old.statusDetail||'Finished',
+            result:old.result||deriveResult(old)
+          };
+          completed.push(copy);
+        }
+      }
+    }
+  }
+
+  // Persistent history can also restore a finished match after a refresh,
+  // but only when there is explicit finished/end-time evidence.
   for(const old of Object.values(history)){
     const id=String(old.id);
     if(liveIds.has(id)) continue;
@@ -990,22 +1040,93 @@ function mergeAndRebuild(liveList=null, scheduleList=null){
     const oldExplicitDone=done(old);
     if(oldExplicitDone || (Number.isFinite(oldEnd) && oldEnd<=Date.now())){
       if(!completed.some(m=>String(m.id)===id)){
-        const copy={...old,status:'Finished',state:'Finished',statusDetail:old.statusDetail||'Finished',result:old.result||deriveResult(old)};
-        completed.push(copy);
+        completed.push({
+          ...old,
+          status:'Finished',
+          state:'Finished',
+          statusDetail:old.statusDetail||'Finished',
+          result:old.result||deriveResult(old)
+        });
       }
     }
   }
 
-  const upcoming=unique(all.filter(m=>!liveIds.has(String(m.id)) && withinNext7Days(m) && !done(m)));
+  // Upcoming is always derived from the complete schedule snapshot and the
+  // next-7-day time window. A match already represented as LIVE is excluded.
+  const upcoming=unique(
+    all.filter(m=>!liveIds.has(String(m.id)) && withinNext7Days(m) && !done(m))
+  ).sort((a,b)=>(startMs(a)||Infinity)-(startMs(b)||Infinity));
 
-  // If a non-empty LIVE update arrived, it is authoritative. If it was empty
-  // or failed, retain the previous successful LIVE snapshot.
+  // Fresh non-empty LIVE response replaces LIVE. Empty/error responses retain
+  // the last successful LIVE snapshot.
   if(liveHasData){
     cache.LIVE=liveNow;
   }
+
   cache.UPCOMING=upcoming;
-  cache.COMPLETED=unique(completed).map(m=>({...m,result:m.result||deriveResult(m)}));
+  cache.COMPLETED=unique(completed)
+    .filter(m=>!liveIds.has(String(m.id)))
+    .sort((a,b)=>(startMs(b)||0)-(startMs(a)||0))
+    .map(m=>({...m,result:m.result||deriveResult(m)}));
 }
+let boundaryTimer=null;
+let boundaryTimerToken=0;
+
+function scheduleApiBoundaryRefresh(){
+  if(boundaryTimer) { clearTimeout(boundaryTimer); boundaryTimer=null; }
+  const token=++boundaryTimerToken;
+  const now=Date.now();
+
+  // Only schedule one controlled API refresh: the nearest upcoming start or
+  // known end boundary. This is not polling. It fires once at a meaningful
+  // match-state boundary, then the next boundary is scheduled from the new
+  // API data. Existing 30-minute endpoint caching and the rolling hit guard
+  // still apply.
+  const candidates=[
+    ...((cache.UPCOMING||[]).map(m=>({t:startMs(m),kind:'start'}))),
+    ...((cache.LIVE||[]).map(m=>({t:endMs(m),kind:'end'})))
+  ].filter(x=>Number.isFinite(x.t) && x.t>now);
+
+  if(!candidates.length) return;
+  candidates.sort((a,b)=>a.t-b.t);
+  const next=candidates[0];
+  const delay=Math.max(1000,Math.min(next.t-now+1500,24*60*60*1000));
+
+  boundaryTimer=setTimeout(async()=>{
+    if(token!==boundaryTimerToken) return;
+    // Force exactly one fresh LIVE request at the boundary. This bypasses the
+    // 30-minute cache only for this scheduled state transition.
+    try{
+      const liveRaw=await fetchCricketPathFresh("/api/cricket/live");
+      const liveAll=normalize(liveRaw);
+      if(liveAll.length>0){
+        mergeAndRebuild(liveAll,null);
+        localStorage.setItem("kings11_last_live",JSON.stringify({ts:Date.now(),data:liveRaw}));
+      }
+    }catch(_){
+      // Never erase existing data on a boundary refresh failure.
+    }
+    updateStatus();
+    render();
+    scheduleApiBoundaryRefresh();
+  },delay);
+}
+
+async function fetchCricketPathFresh(path){
+  consumeApiBudget(path);
+  const r=await fetch(CRICKET_API+path,{
+    method:"GET",mode:"cors",cache:"no-store",
+    headers:{Accept:"application/json"}
+  });
+  const text=await r.text();
+  if(!r.ok) throw Error(`${path}: HTTP ${r.status}`);
+  let j; try{j=JSON.parse(text)}catch{throw Error(`${path}: Worker response JSON nahi hai`)}
+  if(j?.success===false) throw Error(`${path}: ${j.error||j.message||"success:false"}`);
+  // Do not write empty live responses into the endpoint cache.
+  if(responseMatchCount(j)>0) writeEndpointCache(path,j);
+  return j;
+}
+
 function updateStatus(){
  const b=budgetState();
  $("status").textContent=
@@ -1033,6 +1154,7 @@ async function loadLiveOnly(force=false){
      // current LIVE list. This prevents transient empty responses from making
      // the UI show LIVE = 0.
      mergeAndRebuild(liveAll, null);
+     scheduleApiBoundaryRefresh();
      localStorage.setItem("kings11_last_live", JSON.stringify({ts:Date.now(), data:liveRaw}));
    }else{
      // Keep the previous successful LIVE data. Do not overwrite it with [].
@@ -1044,6 +1166,7 @@ async function loadLiveOnly(force=false){
    liveLoaded=true;
    updateStatus();
    render();
+   scheduleApiBoundaryRefresh();
  }catch(e){
    // Network/429/Worker failure: preserve current or last successful snapshot.
    if(!cache.LIVE.length) applySavedLiveSnapshot();
@@ -1065,6 +1188,7 @@ async function loadScheduleOnly(force=false){
      // Never erase a useful schedule with an empty upstream response.
      if(list.length>0){
        mergeAndRebuild(null, list);
+       scheduleApiBoundaryRefresh();
        localStorage.setItem("kings11_last_schedule", JSON.stringify({ts:Date.now(), data:scheduleRaw}));
      }else{
        applySavedScheduleSnapshot();
@@ -1091,6 +1215,7 @@ async function loadScheduleOnly(force=false){
 // 30 minutes, so reloads/tab changes during that window make zero API hits.
 async function loadMatches(){
   await Promise.allSettled([loadLiveOnly(), loadScheduleOnly()]);
+  scheduleApiBoundaryRefresh();
 }
 
 async function details(enc){
