@@ -17,23 +17,25 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,13,24,.95);backdrop-fi
 .title-row{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.title-row h2{font-size:18px;margin:0}.small{font-size:11px;color:var(--muted)}
 .match{background:linear-gradient(145deg,var(--card),#0a1728);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin:12px 0;box-shadow:0 10px 30px #0003}
 .match-head{padding:12px 14px;border-bottom:1px solid var(--line)}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.series{font-size:11px;color:var(--muted);font-weight:800}.badge{font-size:10px;font-weight:950;padding:5px 8px;border-radius:999px;background:#172941}.badge.live{color:#ff8190;background:#341923}
-.teams{padding:14px}.team{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:10px;margin:8px 0}.team img{width:36px;height:36px;object-fit:contain;border-radius:50%;background:#fff;padding:3px}.team-logo{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#172941}.team-name{font-weight:900}.score{font-weight:950}.meta{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5}
+.teams{padding:14px}.team{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:10px;margin:10px 0;padding:9px 10px;border:1px solid rgba(93,141,255,.16);border-radius:12px;background:rgba(9,23,40,.55)}.team img{width:38px;height:38px;object-fit:contain;border-radius:50%;background:#fff;padding:3px}.team-logo{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#172941;border:1px solid #31527a;font-size:18px}.team-name{font-weight:900;line-height:1.25;word-break:break-word}.score{font-weight:950;margin-top:3px;color:#dbe7ff;font-size:13px}.meta{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5}.team-info{min-width:0}
 .valuebar{margin:0 14px 12px;padding:10px 11px;border:1px solid #29415f;background:#0d2137;border-radius:12px;display:flex;justify-content:space-between;align-items:center}.value-label{font-size:10px;color:var(--muted);font-weight:900}.value{font-size:17px;font-weight:950;color:var(--gold)}
 .actions{display:flex;gap:8px;padding:0 14px 14px}.btn{flex:1;border:0;border-radius:11px;padding:11px 8px;font-weight:950}.join{background:var(--green);color:#03140b}.details{background:#172941;color:#fff;border:1px solid #29415f}.danger{background:#321722;color:#ff8290;border:1px solid #61303b}
 .bottom{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(5,13,24,.97);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}.bottom-in{max-width:750px;margin:auto;display:flex;justify-content:space-around}.bottom-item{font-size:11px;color:var(--muted);font-weight:900;text-align:center}.bottom-item b{display:block;font-size:18px;margin-bottom:2px}
 .modal{position:fixed;inset:0;z-index:100;background:#000b;display:none;align-items:flex-end}.modal.show{display:flex}.sheet{width:100%;max-width:780px;margin:auto;max-height:90vh;overflow:auto;background:#091728;border:1px solid var(--line);border-radius:22px 22px 0 0}.sheet-head{position:sticky;top:0;z-index:2;background:#091728;border-bottom:1px solid var(--line);padding:15px 16px}.close{float:right;border:0;background:#172941;color:#fff;border-radius:9px;padding:7px 10px}.sheet-body{padding:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;margin:10px 0}.card h3{margin:0 0 10px;font-size:14px}.kv{display:flex;justify-content:space-between;gap:12px;margin:8px 0;font-size:12px;color:var(--muted)}.kv b{color:var(--text);text-align:right}.input{width:100%;padding:12px;border-radius:11px;border:1px solid #2b4664;background:#081525;color:#fff;outline:none;margin:5px 0}.input:focus{border-color:var(--green)}.primary{width:100%;border:0;border-radius:11px;padding:12px;background:var(--green);font-weight:950;color:#03140b;margin-top:8px}.secondary{width:100%;border:1px solid #29415f;border-radius:11px;padding:12px;background:#14263d;color:#fff;font-weight:900;margin-top:8px}
-.auth{position:fixed;inset:0;z-index:120;background:#000b;display:grid;place-items:center;padding:22px;overflow:auto}.auth-box{width:min(430px,100%);background:linear-gradient(145deg,#0d1b2d,#091728);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 20px 60px #0006}.auth-logo{text-align:center;font-size:32px;font-weight:950}.auth-logo span{color:var(--green)}.auth-sub{text-align:center;color:var(--muted);font-size:12px;margin:4px 0 20px}.switch{display:flex;gap:7px;margin-bottom:14px}.switch button{flex:1;border:1px solid var(--line);background:#101f32;color:var(--muted);padding:10px;border-radius:10px;font-weight:900}.switch button.active{background:var(--green);color:#03140b}.notice{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
-.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#0b1b2c;border:1px solid var(--line);border-radius:14px;padding:12px}.stat small{display:block;color:var(--muted);font-size:10px}.stat b{display:block;font-size:19px;margin-top:4px}.admin-user{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.admin-user:last-child{border-bottom:0}.pill{font-size:10px;padding:5px 8px;border-radius:999px;background:#172941;color:#bcd0e8}
+.auth{position:fixed;inset:0;z-index:120;background:#000b;display:grid;place-items:center;padding:22px;overflow:auto}.auth-box{position:relative;width:min(430px,100%);background:linear-gradient(145deg,#0d1b2d,#091728);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 20px 60px #0006}.auth-close{position:absolute;right:12px;top:12px;width:40px;height:40px;border:1px solid #31527a;border-radius:50%;background:#14263d;color:#fff;font-size:24px;line-height:1;font-weight:900;z-index:3}.auth-close:hover{background:#203a5d}.auth-logo{text-align:center;font-size:32px;font-weight:950}.auth-logo span{color:var(--green)}.auth-sub{text-align:center;color:var(--muted);font-size:12px;margin:4px 0 20px}.switch{display:flex;gap:7px;margin-bottom:14px}.switch button{flex:1;border:1px solid var(--line);background:#101f32;color:var(--muted);padding:10px;border-radius:10px;font-weight:900}.switch button.active{background:var(--green);color:#03140b}.notice{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#0b1b2c;border:1px solid var(--line);border-radius:14px;padding:12px}.stat small{display:block;color:var(--muted);font-size:10px}.stat b{display:block;font-size:19px;margin-top:4px}.admin-user{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.admin-user:last-child{border-bottom:0}.pill{font-size:10px;padding:5px 8px;border-radius:999px;background:#172941;color:#bcd0e8}.admin-select{width:100%;padding:12px;border-radius:11px;border:1px solid #2b4664;background:#081525;color:#fff;outline:none;margin:5px 0}.admin-select:focus{border-color:var(--green)}.vc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.vc-box{background:#0b1b2c;border:1px solid var(--line);border-radius:14px;padding:11px}.vc-box small{display:block;color:var(--muted);font-size:10px}.vc-box b{display:block;font-size:18px;margin-top:4px}.mini-match{padding:9px 0;border-bottom:1px solid var(--line);font-size:11px}.mini-match:last-child{border-bottom:0}.mini-match b{display:block}.mini-match span{color:var(--muted)}
 @media(min-width:700px){.modal{align-items:center;padding:20px}.sheet{border-radius:22px;max-height:82vh}}
 
+.score-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}.score-summary>div{background:#0b1b2c;border:1px solid var(--line);border-radius:10px;padding:9px}.score-summary span{display:block;color:var(--muted);font-size:10px}.score-summary b{display:block;margin-top:3px;font-size:14px}.innings-card{border:1px solid var(--line);border-radius:13px;padding:10px;margin:10px 0;background:#0a1829}.innings-title{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:5px 2px 10px}.innings-title strong{color:var(--gold)}.score-table{overflow-x:auto}.score-tr{display:grid;grid-template-columns:minmax(150px,2fr) repeat(5,minmax(38px,.55fr));gap:5px;align-items:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.07);font-size:10px;min-width:410px}.score-tr span{min-width:0}.score-tr span:not(:first-child){text-align:right}.score-tr small{display:block;color:var(--muted);font-size:9px;margin-top:2px}.score-th{color:var(--muted);font-weight:900;font-size:9px}.score-extra{padding:8px 2px}.subhead{font-size:11px;font-weight:950;color:#bcd0e8;margin:12px 0 7px}
 .match-vs-title{font-size:20px;font-weight:800;text-align:center;margin:4px 0 12px}.team-left{display:flex;align-items:center;gap:10px}.live-scoreline{margin-top:10px;padding:10px 12px;border:1px solid rgba(93,144,255,.45);border-radius:12px;background:rgba(24,61,140,.28);font-weight:700;color:#fff}.commentary-line{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}.commentary-line span{min-width:24px;opacity:.7}.commentary-line b{font-weight:600}
 </style>
 </head>
 <body>
 
-<section id="authScreen" class="auth hidden">
+<section id="authScreen" class="auth hidden" onclick="if(event.target===this)closeAuth()">
   <div class="auth-box">
+    <button class="auth-close" type="button" aria-label="Close login" onclick="closeAuth()">×</button>
     <div class="auth-logo">KINGS<span>11</span> 🏏</div>
     <div class="auth-sub">CRICKET • VIRTUAL CREDITS • NO CASH VALUE</div>
     <div class="switch">
@@ -78,7 +80,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,13,24,.95);backdrop-fi
 </nav>
 <main class="content">
   <div id="status" class="status">Connecting to KINGS11 cricket server…</div>
-  <div class="title-row"><h2 id="sectionTitle">Live Matches</h2><span id="lastUpdated" class="small"></span></div>
+  <div class="title-row"><h2 id="sectionTitle">Live Matches</h2><div style="display:flex;align-items:center;gap:8px"><span id="lastUpdated" class="small"></span><button class="btn secondary" style="padding:7px 10px;font-size:11px" onclick="refreshLiveNow()">REFRESH LIVE</button></div></div>
   <div id="matches"><div class="small">Loading LIVE / UPCOMING / COMPLETED matches…</div></div>
 </main>
 </div>
@@ -101,14 +103,78 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,13,24,.95);backdrop-fi
    Put ONLY the KINGS11 Supabase project URL + publishable key here.
    Never put a service_role key or CricLive API key in this file.
 */
-const SUPABASE_URL = "https://ecpumtuseevpavevzbux.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_gFzwKGnfDayK6Bp4PmOaSw_Xnd0eu-R";
+const SUPABASE_URL = "PASTE_KINGS11_SUPABASE_URL_HERE";
+const SUPABASE_PUBLISHABLE_KEY = "PASTE_KINGS11_SUPABASE_PUBLISHABLE_KEY_HERE";
 const CRICKET_API = "https://kings11-criclive.maddye-dwivedi4.workers.dev";
 const JOIN_FEE = 500;
 
 let sb=null, session=null, profile=null, wallet=0, currentTab="LIVE";
 let cache={LIVE:[],UPCOMING:[],COMPLETED:[]};
 let detailCache=new Map();
+
+// HARD SAFETY MODE: assume only 100 CricLive calls remain available.
+// This counter covers requests initiated by this browser only; it never retries automatically.
+const API_BUDGET_KEY="kings11_api_budget_v1";
+const API_BUDGET_MAX=100;
+const ENDPOINT_CACHE_TTL={
+  live: 30*60*1000,
+  schedule: 30*60*1000,
+  scorecard: 24*60*60*1000,
+  commentary: 30*60*1000
+};
+function budgetState(){
+  const now=Date.now();
+  try{
+    const x=JSON.parse(localStorage.getItem(API_BUDGET_KEY)||'null');
+    if(x && Array.isArray(x.hits)){
+      // Rolling 24-hour window: only calls made in the last 24h count.
+      x.hits=x.hits.filter(ts=>Number.isFinite(ts) && now-ts < 24*60*60*1000);
+      x.used=x.hits.length;
+      localStorage.setItem(API_BUDGET_KEY,JSON.stringify(x));
+      return x;
+    }
+  }catch(_){}
+  const x={hits:[],used:0};
+  localStorage.setItem(API_BUDGET_KEY,JSON.stringify(x));
+  return x;
+}
+function endpointKind(path){
+  if(path.includes('/live')) return 'live';
+  if(path.includes('/schedule')) return 'schedule';
+  if(path.includes('/scorecard')) return 'scorecard';
+  if(path.includes('/commentary')) return 'commentary';
+  return 'other';
+}
+function cacheKey(path){return 'kings11_api_cache_v3_'+path;}
+function readEndpointCache(path){
+  try{
+    const x=JSON.parse(localStorage.getItem(cacheKey(path))||'null');
+    const ttl=ENDPOINT_CACHE_TTL[endpointKind(path)]||0;
+    if(x && ttl && Date.now()-x.ts<ttl) return x.data;
+  }catch(_){}
+  return null;
+}
+function responseMatchCount(data){
+  try{ return arr(data).length; }catch(_){ return 0; }
+}
+function isUsefulMatchResponse(path,data){
+  const n=responseMatchCount(data);
+  if(n>0) return true;
+  // A zero-match response is not allowed to erase a previously successful
+  // non-empty snapshot. It may be a temporary upstream/transform issue.
+  return false;
+}
+function writeEndpointCache(path,data){
+  try{localStorage.setItem(cacheKey(path),JSON.stringify({ts:Date.now(),data}));}catch(_){}
+}
+function consumeApiBudget(path){
+  const b=budgetState();
+  if(b.used>=API_BUDGET_MAX) throw Error('KINGS11 safety limit reached: 100 calls in the rolling 24-hour window. No CricLive request will be sent.');
+  b.hits.push(Date.now());
+  b.used=b.hits.length;
+  localStorage.setItem(API_BUDGET_KEY,JSON.stringify(b));
+  return b.used;
+}
 
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -130,38 +196,44 @@ function initSupabase(){
   return true;
 }
 /* =========================
-   KINGS11 TEST OTP MODE
-   Only for temporary local testing.
-   TEST OTP is not a Supabase authentication bypass.
+   TEMPORARY TEST OTP MODE
+   Only for the current KINGS11 test account.
+   Test phone: 8858759296 | Test OTP: 123456
+   This does NOT create or bypass a real Supabase Auth session.
    ========================= */
+const KINGS11_TEST_PHONE = "8858759296";
 const KINGS11_TEST_OTP = "123456";
-const KINGS11_TEST_MODE = true;
-
+function normalizeTestPhone(v){
+  const d=String(v||"").replace(/\D/g,"");
+  return d.length>=10?d.slice(-10):d;
+}
+function bootTestUser(){
+  session={__kings11Test:true,user:{id:"kings11-test-user",phone:KINGS11_TEST_PHONE}};
+  profile={id:"kings11-test-user",kings11_id:"KINGS11-TEST",display_name:"KINGS11 Test User",phone:KINGS11_TEST_PHONE,role:"user"};
+  walletData={balance:0,joining_vc:0,playing_vc:0};
+  wallet=0;
+  $("authScreen").classList.add("hidden");
+  $("loginTop").textContent="KINGS11-TEST";
+  $("balance").textContent="0";
+  $("status").textContent="Logged in • KINGS11 Test User";
+  $("bottom").classList.remove("hidden");
+}
 async function sendOTP(){
-  if(!initSupabase())return;
   const phone=$("phone").value.trim();
   if(!phone)return msg("Mobile number dijiye.");
-  if(KINGS11_TEST_MODE){
-    $("otpBox").classList.remove("hidden");
-    msg("TEST MODE: OTP 123456 enter kijiye.");
-    return;
+  if(normalizeTestPhone(phone)!==KINGS11_TEST_PHONE){
+    return msg("Abhi TEST MODE me sirf configured KINGS11 test mobile se login hoga.");
   }
-  msg("OTP bheja ja raha hai…");
-  const {error}=await sb.auth.signInWithOtp({phone});
-  if(error)return msg(error.message);
-  $("otpBox").classList.remove("hidden");msg("OTP bhej diya gaya. OTP enter kijiye.");
+  $("otpBox").classList.remove("hidden");
+  msg("TEST OTP bheja gaya. OTP: 123456");
 }
 async function verifyOTP(){
   const phone=$("phone").value.trim(), token=$("otp").value.trim();
   if(!phone||!token)return msg("Mobile aur OTP dono dijiye.");
-  if(KINGS11_TEST_MODE){
-    if(token!==KINGS11_TEST_OTP)return msg("Invalid TEST OTP. 123456 enter kijiye.");
-    return msg("TEST OTP verified. Real KINGS11 Supabase login ke liye normal OTP mode enable kijiye.");
-  }
-  msg("OTP verify ho raha hai…");
-  const {data,error}=await sb.auth.verifyOtp({phone,token,type:"sms"});
-  if(error)return msg(error.message);
-  await bootUser(data.session);
+  if(normalizeTestPhone(phone)!==KINGS11_TEST_PHONE)return msg("Test mobile number match nahi hai.");
+  if(token!==KINGS11_TEST_OTP)return msg("Galat OTP. TEST OTP 123456 hai.");
+  msg("OTP verified. KINGS11 khul raha hai…");
+  bootTestUser();
 }
 async function adminLogin(){
   if(!initSupabase())return;
@@ -184,29 +256,47 @@ async function bootUser(s){
   $("bottom").classList.remove("hidden");
   if(profile.role==="admin")$("bottom").classList.remove("hidden");
 }
+let walletData={balance:0,joining_vc:0,playing_vc:0};
 async function refreshWallet(){
   const {data,error}=await sb.from("wallets").select("*").eq("user_id",session.user.id).single();
-  if(!error&&data){wallet=Number(pick(data,["balance","credits","vc"],0));$("balance").textContent=wallet.toLocaleString("en-IN")}
+  if(!error&&data){
+    walletData={...walletData,...data};
+    const joining=Number(data.joining_vc||0), playing=Number(data.playing_vc||0);
+    wallet=joining+playing;
+    $("balance").textContent=wallet.toLocaleString("en-IN");
+  }
 }
 function logout(){
   if(sb)sb.auth.signOut();
   location.reload();
 }
 function openLogin(){ $("authScreen").classList.remove("hidden"); }
+function closeAuth(){ $("authScreen").classList.add("hidden"); }
 function showHome(){closeModal();window.scrollTo({top:0,behavior:"smooth"})}
+function profileMatchSnapshot(){
+  const groups=[["LIVE",cache.LIVE||[]],["UPCOMING",cache.UPCOMING||[]],["COMPLETED",cache.COMPLETED||[]]];
+  return groups.map(([label,items])=>`<div class="card"><h3>${label} • ${items.length}</h3>${items.slice(0,12).map(m=>`<div class="mini-match"><b>${esc(matchName(m))}</b><span>${esc(label==="LIVE"?(liveLine(m)||"LIVE"):label==="COMPLETED"?(m.result||deriveResult(m)||"FINISHED"):fmt(m.start))}</span></div>`).join("")||'<div class="small">No matches in this section.</div>'}</div>`).join("");
+}
 function showProfile(){
   if(!session){openLogin();return}
+  const joining=Number(walletData.joining_vc||0), playing=Number(walletData.playing_vc||0);
   $("modalTitle").textContent="MY KINGS11 PROFILE";
   $("modalBody").innerHTML=`
    <div class="profile-grid">
     <div class="stat"><small>KINGS11 ID</small><b>${esc(profile?.kings11_id||"-")}</b></div>
-    <div class="stat"><small>VC BALANCE</small><b>${wallet.toLocaleString("en-IN")}</b></div>
+    <div class="stat"><small>TOTAL VC</small><b>${wallet.toLocaleString("en-IN")}</b></div>
    </div>
+   <div class="vc-grid">
+    <div class="vc-box"><small>JOINING VC</small><b>${joining.toLocaleString("en-IN")}</b></div>
+    <div class="vc-box"><small>PLAYING VC</small><b>${playing.toLocaleString("en-IN")}</b></div>
+   </div>
+   <div class="notice">Match join ke liye 500 Joining VC + minimum 1,000 Playing VC chahiye.</div>
    <div class="card"><h3>Account</h3>
     <div class="kv"><span>Name</span><b>${esc(profile?.display_name||"-")}</b></div>
     <div class="kv"><span>Phone</span><b>${esc(profile?.phone||session?.user?.phone||"-")}</b></div>
     <div class="kv"><span>Role</span><b>${esc(profile?.role||"user")}</b></div>
    </div>
+   ${profileMatchSnapshot()}
    <div class="card"><h3>Recent VC Transactions</h3><div id="txList">Loading…</div></div>
    <button class="danger btn" style="width:100%" onclick="logout()">LOG OUT</button>`;
   $("modal").classList.add("show");
@@ -224,90 +314,399 @@ async function showAdmin(){
   if(profile?.role!=="admin")return alert("Admin access nahi hai.");
   $("modalTitle").textContent="KINGS11 ADMIN PANEL";
   $("modalBody").innerHTML=`
-   <div class="card"><h3>Add / Remove Virtual Credits</h3>
-    <input id="adminSearch" class="input" placeholder="KINGS11 ID / display name / phone">
-    <button class="secondary" onclick="findAdminUsers()">SEARCH USERS</button>
-    <div id="adminUsers"></div>
-    <input id="adminAmount" class="input" type="number" min="1" placeholder="VC amount">
-    <input id="adminNote" class="input" placeholder="Reason / note">
-    <div style="display:flex;gap:8px"><button class="btn join" onclick="adjustSelected(1)">ADD VC</button><button class="btn danger" onclick="adjustSelected(-1)">REMOVE VC</button></div>
+   <div class="card"><h3>ADMIN VC SUMMARY</h3><div id="adminSummary">Loading…</div></div>
+   <div class="card"><h3>CREATE NEW USER</h3>
+    <input id="newUserName" class="input" placeholder="User display name">
+    <input id="newUserPhone" class="input" placeholder="+91XXXXXXXXXX" inputmode="tel">
+    <button class="primary" onclick="adminCreateUser()">CREATE USER</button>
+    <div id="createUserMsg" class="notice"></div>
    </div>
-   <div class="card"><h3>Admin Rules</h3><div class="notice">Only admin role can adjust VC. User cannot add their own VC. Every adjustment is recorded in the credit transaction ledger.</div></div>`;
+   <div class="card"><h3>SELECT USER</h3>
+    <select id="adminUserSelect" class="admin-select" onchange="selectAdminUserById(this.value)">
+      <option value="">Loading users…</option>
+    </select>
+   </div>
+   <div class="card"><h3>ALLOCATE / RECOVER VC</h3>
+    <div class="kv"><span>Selected user</span><b id="selectedUserLabel">-</b></div>
+    <select id="adminVcType" class="admin-select">
+      <option value="playing">PLAYING VC</option>
+      <option value="joining">JOINING VC</option>
+    </select>
+    <select id="adminVcAmount" class="admin-select">
+      <option value="1000">1K VC</option><option value="1500">1.5K VC</option><option value="2000">2K VC</option>
+      <option value="5000">5K VC</option><option value="7500">7.5K VC</option><option value="10000">10K VC</option>
+      <option value="20000">20K VC</option><option value="50000">50K VC</option>
+    </select>
+    <input id="adminNote" class="input" placeholder="Reason / note">
+    <div style="display:flex;gap:8px"><button class="btn join" onclick="adjustSelected(1)">ALLOCATE VC</button><button class="btn danger" onclick="adjustSelected(-1)">RECOVER VC</button></div>
+    <div class="notice">User khud VC add nahi kar sakta. Admin hi allocation/recovery karega. Joining VC aur Playing VC alag ledger mein rahenge.</div>
+   </div>
+   <div class="card"><h3>LIVE MATCHES</h3><div id="adminLiveMatches">Loading…</div></div>`;
   $("modal").classList.add("show");
+  await loadAdminUsers();
+  await refreshAdminSummary();
+  renderAdminLiveMatches();
 }
 let selectedAdminUser=null;
-async function findAdminUsers(){
-  const q=$("adminSearch").value.trim();if(!q)return;
-  const {data,error}=await sb.from("profiles").select("id,kings11_id,display_name,phone,role").or(`kings11_id.ilike.%${q}%,display_name.ilike.%${q}%,phone.ilike.%${q}%`).limit(20);
-  if(error){$("adminUsers").textContent=error.message;return}
-  $("adminUsers").innerHTML=data?.length?data.map(u=>`<div class="admin-user"><div><b>${esc(u.display_name||"-")}</b><div class="small">${esc(u.kings11_id||"")} • ${esc(u.phone||"")}</div></div><button class="pill" onclick='selectAdminUser(${JSON.stringify(u)})'>SELECT</button></div>`).join(""):"No users found.";
+async function loadAdminUsers(){
+  const {data,error}=await sb.from("profiles").select("id,kings11_id,display_name,phone,role").eq("role","user").order("display_name",{ascending:true});
+  if(error){$("adminUserSelect").innerHTML='<option value="">Users load nahi hue</option>';return}
+  const users=data||[];
+  $("adminUserSelect").innerHTML='<option value="">Select user</option>'+users.map(u=>`<option value="${esc(u.id)}">${esc(u.display_name||"-")} • ${esc(u.kings11_id||"")} • ${esc(u.phone||"")}</option>`).join("");
+  window.kings11AdminUsers=users;
 }
-function selectAdminUser(u){selectedAdminUser=u;$("adminSearch").value=`${u.display_name||""} (${u.kings11_id||""})`;alert("Selected: "+(u.display_name||u.kings11_id))}
+function selectAdminUserById(id){
+  selectedAdminUser=(window.kings11AdminUsers||[]).find(u=>String(u.id)===String(id))||null;
+  $("selectedUserLabel").textContent=selectedAdminUser?`${selectedAdminUser.display_name||"-"} • ${selectedAdminUser.kings11_id||""}`:"-";
+}
+async function refreshAdminSummary(){
+  const box=$("adminSummary"); if(!box)return;
+  const {data:admins}=await sb.from("profiles").select("id,kings11_id,display_name").eq("role","admin");
+  const admin=admins?.[0];
+  if(!admin){box.textContent="Admin profile not found.";return}
+  const {data:w}=await sb.from("wallets").select("*").eq("user_id",admin.id).single();
+  const available=Number(w?.balance||0), issued=Number(w?.total_issued_vc||0), recovered=Number(w?.total_recovered_vc||0);
+  box.innerHTML=`<div class="vc-grid"><div class="vc-box"><small>ADMIN VC POOL</small><b>${available.toLocaleString("en-IN")}</b></div><div class="vc-box"><small>TOTAL ISSUED</small><b>${issued.toLocaleString("en-IN")}</b></div><div class="vc-box"><small>TOTAL RECOVERED</small><b>${recovered.toLocaleString("en-IN")}</b></div><div class="vc-box"><small>ACTIVE USER COUNT</small><b>${(window.kings11AdminUsers||[]).length}</b></div></div>`;
+}
+async function adminCreateUser(){
+  const name=$("newUserName").value.trim(), phone=$("newUserPhone").value.trim(), box=$("createUserMsg");
+  if(!name||!phone){box.textContent="Name aur mobile number dijiye.";return}
+  box.textContent="User account create ho raha hai…";
+  const {data,error}=await sb.functions.invoke("admin-create-user",{body:{display_name:name,phone}});
+  if(error){box.textContent=error.message||"User create nahi hua.";return}
+  box.textContent=`User create ho gaya • ${data?.kings11_id||""}`;
+  $("newUserName").value="";$("newUserPhone").value="";
+  await loadAdminUsers(); await refreshAdminSummary();
+}
 async function adjustSelected(sign){
-  if(!selectedAdminUser)return alert("Pehle user select kijiye.");
-  const amount=Math.floor(Number($("adminAmount").value||0));if(amount<=0)return alert("Valid VC amount dijiye.");
-  const note=$("adminNote").value.trim()||"Admin VC adjustment";
-  const {error}=await sb.rpc("admin_adjust_wallet",{p_user_id:selectedAdminUser.id,p_amount:sign*amount,p_note:note});
+  if(!selectedAdminUser)return alert("Pehle dropdown se user select kijiye.");
+  const amount=Math.floor(Number($("adminVcAmount").value||0));if(amount<=0)return alert("Valid VC amount dijiye.");
+  const type=$("adminVcType").value;
+  const note=$("adminNote").value.trim()||`${sign>0?"Admin allocation":"Admin recovery"} • ${type} VC`;
+  const {error}=await sb.rpc("admin_transfer_vc",{p_user_id:selectedAdminUser.id,p_amount:sign*amount,p_vc_type:type,p_note:note});
   if(error){alert(error.message);return}
-  alert("VC update ho gaya.");
-  if(selectedAdminUser.id===session.user.id)await refreshWallet();
+  alert(sign>0?`${amount.toLocaleString("en-IN")} ${type} VC allocate ho gaya.`:`${amount.toLocaleString("en-IN")} ${type} VC recover ho gaya.`);
+  $("adminNote").value="";
+  await refreshAdminSummary();
+  await loadAdminUsers();
+}
+function renderAdminLiveMatches(){
+  const box=$("adminLiveMatches"); if(!box)return;
+  const list=cache.LIVE||[];
+  box.innerHTML=list.length?list.map(m=>`<div class="mini-match"><b>${esc(matchName(m))}</b><span>${esc(liveLine(m)||"LIVE")}</span></div>`).join(""):'<div class="small">Abhi koi LIVE match nahi hai.</div>';
 }
 function closeModal(){$("modal").classList.remove("show")}
-function arr(o){
-  const looks=x=>x&&typeof x==="object"&&!Array.isArray(x)&&(
-    "match_id" in x || "matchId" in x || "match_desc" in x ||
-    "first_team" in x || "second_team" in x || "home_team" in x ||
-    "away_team" in x || "state" in x || "status" in x
-  );
-  if(Array.isArray(o)) return o;
-  if(!o || typeof o!=="object") return [];
-  const direct=["data","matches","results","response","fixtures","schedule","items","records","events"];
-  for(const k of direct){
-    const v=o[k];
-    if(Array.isArray(v) && v.length) return v;
-    if(v && typeof v==="object"){
-      for(const kk of direct){
-        if(Array.isArray(v[kk]) && v[kk].length) return v[kk];
-      }
-    }
-  }
-  const walk=(v,d=0)=>{
-    if(d>8||v==null)return[];
-    if(Array.isArray(v)){
-      if(v.length && v.some(looks))return v;
-      for(const x of v){const r=walk(x,d+1);if(r.length)return r}
-      return[];
-    }
-    if(typeof v!=="object")return[];
-    for(const k of direct){if(k in v){const r=walk(v[k],d+1);if(r.length)return r}}
-    for(const k of Object.keys(v)){const r=walk(v[k],d+1);if(r.length)return r}
-    return[];
-  };
-  return walk(o);
+function isMatchObject(x){
+ if(!x || typeof x!=="object" || Array.isArray(x)) return false;
+ const hasId = x.match_id!=null || x.matchId!=null || x.id!=null;
+ const hasPair = (x.first_team!=null && x.second_team!=null) ||
+                 (x.home_team!=null && x.away_team!=null) ||
+                 (x.team1!=null && x.team2!=null) ||
+                 (x.home!=null && x.away!=null) ||
+                 (x.firstTeam!=null && x.secondTeam!=null) ||
+                 (x.team_1!=null && x.team_2!=null);
+ return (hasId && hasPair) || (hasPair && (x.match_desc!=null || x.match_name!=null || x.title!=null || x.series_name!=null || x.status!=null || x.state!=null || x.date!=null));
+}
+function collectMatches(root, out=[], seen=new Set(), depth=0){
+ if(depth>10 || root==null) return out;
+ if(Array.isArray(root)){
+   for(const x of root) collectMatches(x,out,seen,depth+1);
+   return out;
+ }
+ if(typeof root!=="object") return out;
+ if(isMatchObject(root)){
+   if(!seen.has(root)){ seen.add(root); out.push(root); }
+   return out;
+ }
+ for(const v of Object.values(root)) collectMatches(v,out,seen,depth+1);
+ return out;
+}
+function arr(o){ return collectMatches(o); }
+function deepFirst(obj, keys, depth=0, seen=new Set()){
+ if(depth>8 || obj==null || typeof obj!=="object" || seen.has(obj)) return "";
+ seen.add(obj);
+ if(Array.isArray(obj)){
+   for(const x of obj){const v=deepFirst(x,keys,depth+1,seen); if(v!==""&&v!=null)return v;}
+   return "";
+ }
+ for(const k of keys){
+   if(Object.prototype.hasOwnProperty.call(obj,k)){
+     const v=obj[k];
+     if(v!==undefined&&v!==null&&v!=="") return v;
+   }
+ }
+ for(const v of Object.values(obj)){
+   const r=deepFirst(v,keys,depth+1,seen);
+   if(r!==""&&r!=null)return r;
+ }
+ return "";
+}
+function teamObj(m, side){
+ const keys=side==='home'
+  ? ['first_team','home_team','team1','home','firstTeam','team_1']
+  : ['second_team','away_team','team2','away','secondTeam','team_2'];
+ for(const k of keys){
+   const v=m?.[k];
+   if(v!==undefined&&v!==null&&v!=="") return v;
+ }
+ return {};
+}
+function teamName(x, fallback){
+ if(typeof x==='string') return x.trim()||fallback;
+ if(!x || typeof x!=='object') return fallback;
+ const v=pick(x,['full_name','fullName','name','team_name','teamName','short_name','shortName','title'],'');
+ if(typeof v==='string' && v.trim()) return v.trim();
+ if(v && typeof v==='object') return teamName(v,fallback);
+ return fallback;
+}
+function teamLogo(x){
+ if(!x) return '';
+ const keys=[
+  'logo','logo_url','logoUrl','image','image_url','imageUrl',
+  'team_logo','teamLogo','team_logo_url','teamLogoUrl',
+  'crest','crest_url','crestUrl','badge','badge_url','badgeUrl',
+  'icon','icon_url','iconUrl','photo','photo_url','photoUrl',
+  'team_image','teamImage','team_image_url','teamImageUrl',
+  'image_link','imageLink','image_src','imageSrc','src','url'
+ ];
+ const normalizeUrl=v=>{
+   if(typeof v!=='string') return '';
+   const u=v.trim();
+   if(!u) return '';
+   if(/^https?:\/\//i.test(u)) return u;
+   if(u.startsWith('//')) return 'https:'+u;
+   return '';
+ };
+ const direct=normalizeUrl(pick(x,keys,''));
+ if(direct) return direct;
+ if(typeof x==='object'){
+   const nested=deepFirst(x,keys);
+   const u=normalizeUrl(nested);
+   if(u) return u;
+   for(const k of ['logo','image','team_image','teamImage','team']){
+     const v=x[k];
+     if(v && typeof v==='object'){
+       const u2=normalizeUrl(pick(v,['url','src','href','image_url','imageUrl','logo','logo_url','logoUrl'],''));
+       if(u2) return u2;
+     }
+   }
+ }
+ return '';
+}
+function teamInitials(name){
+ const n=String(name||'').trim();
+ if(!n) return '🏏';
+ const words=n.replace(/[^A-Za-z0-9 ]+/g,' ').trim().split(/\s+/).filter(Boolean);
+ if(words.length===1) return words[0].slice(0,2).toUpperCase();
+ return (words[0][0]+words[words.length-1][0]).toUpperCase();
+}
+const STATIC_TEAM_LOGOS={
+  // Official ICC CDN team images. These are static image requests, not CricLive API calls.
+  'afghanistan':'https://images.icc-cricket.com/image/upload/t_q-best/prd/iwjk0vb7agpa7tyhuzea',
+  'afg':'https://images.icc-cricket.com/image/upload/t_q-best/prd/iwjk0vb7agpa7tyhuzea',
+  'australia':'https://images.icc-cricket.com/image/upload/t_q-best/prd/h5apsohhlfsn9ydrivoe',
+  'aus':'https://images.icc-cricket.com/image/upload/t_q-best/prd/h5apsohhlfsn9ydrivoe',
+  'bangladesh':'https://images.icc-cricket.com/image/upload/t_q-best/prd/jxmhkysemy0gkkmjwmct',
+  'ban':'https://images.icc-cricket.com/image/upload/t_q-best/prd/jxmhkysemy0gkkmjwmct',
+  'england':'https://images.icc-cricket.com/image/upload/t_q-best/prd/pnintojotbm9ll60cczx',
+  'eng':'https://images.icc-cricket.com/image/upload/t_q-best/prd/pnintojotbm9ll60cczx',
+  'india':'https://images.icc-cricket.com/image/upload/t_q-best/prd/neu91cc4x40lphf6ubgh',
+  'ind':'https://images.icc-cricket.com/image/upload/t_q-best/prd/neu91cc4x40lphf6ubgh',
+  'ireland':'https://images.icc-cricket.com/image/upload/t_q-best/prd/j5p9gymd8zwbdt102sta',
+  'ire':'https://images.icc-cricket.com/image/upload/t_q-best/prd/j5p9gymd8zwbdt102sta',
+  'new zealand':'https://images.icc-cricket.com/image/upload/t_q-best/prd/ftjoqz45fxlacmrej5oc',
+  'newzealand':'https://images.icc-cricket.com/image/upload/t_q-best/prd/ftjoqz45fxlacmrej5oc',
+  'nz':'https://images.icc-cricket.com/image/upload/t_q-best/prd/ftjoqz45fxlacmrej5oc',
+  'pakistan':'https://images.icc-cricket.com/image/upload/t_q-best/prd/iexljg3x5le23ts9xmwl',
+  'pak':'https://images.icc-cricket.com/image/upload/t_q-best/prd/iexljg3x5le23ts9xmwl',
+  'south africa':'https://images.icc-cricket.com/image/upload/t_q-best/prd/kaefiv6vudqhj1vbqq0h',
+  'southafrica':'https://images.icc-cricket.com/image/upload/t_q-best/prd/kaefiv6vudqhj1vbqq0h',
+  'rsa':'https://images.icc-cricket.com/image/upload/t_q-best/prd/kaefiv6vudqhj1vbqq0h',
+  'sri lanka':'https://images.icc-cricket.com/image/upload/t_q-best/prd/jb2iqj3djs8g2jbv25nm',
+  'srilanka':'https://images.icc-cricket.com/image/upload/t_q-best/prd/jb2iqj3djs8g2jbv25nm',
+  'sl':'https://images.icc-cricket.com/image/upload/t_q-best/prd/jb2iqj3djs8g2jbv25nm',
+  'west indies':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vvn4mghhobtwnb2cv7yi',
+  'westindies':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vvn4mghhobtwnb2cv7yi',
+  'wi':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vvn4mghhobtwnb2cv7yi',
+  'zimbabwe':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vz1jpphfrjvbuowwrrtt',
+  'zim':'https://images.icc-cricket.com/image/upload/t_q-best/prd/vz1jpphfrjvbuowwrrtt',
+  // Associate-team logos (static image URLs; no CricLive API hit).
+  'namibia':'https://pbs.twimg.com/profile_images/1252517497703673857/Cesggr9j_400x400.jpg',
+  'nam':'https://pbs.twimg.com/profile_images/1252517497703673857/Cesggr9j_400x400.jpg',
+  'united arab emirates':'https://d32qys9a6wm9no.cloudfront.net/images/sports/07151d742db.png?t=1769403300',
+  'uae':'https://d32qys9a6wm9no.cloudfront.net/images/sports/07151d742db.png?t=1769403300',
+  'indonesia':'https://emergingcricket.com/my_content/uploads/2020/10/Indonesia-logo.jpg',
+  'ina':'https://emergingcricket.com/my_content/uploads/2020/10/Indonesia-logo.jpg',
+  'south korea':'https://flagcdn.com/w160/kr.png',
+  'korea':'https://flagcdn.com/w160/kr.png',
+  'sk':'https://flagcdn.com/w160/kr.png'
+};
+function logoKey(name){
+ const n=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ const aliases=[n,n.replace(/\b(champions|a|xi|legends|men|women|cricket|team)\b/g,' ').replace(/\s+/g,' ').trim()];
+ for(const k of aliases){ if(STATIC_TEAM_LOGOS[k]) return k; }
+ if(/\bindia\b/.test(n)) return 'india';
+ if(/\baustralia\b/.test(n)) return 'australia';
+ if(/\bpakistan\b/.test(n)) return 'pakistan';
+ if(/\bwest\s+indies\b/.test(n)) return 'west indies';
+ if(/\bsri\s*lanka\b/.test(n)) return 'sri lanka';
+ if(/\bbangladesh\b/.test(n)) return 'bangladesh';
+ if(/\bengland\b/.test(n)) return 'england';
+ if(/\bnew\s+zealand\b/.test(n)) return 'new zealand';
+ if(/\bsouth\s+africa\b/.test(n)) return 'south africa';
+ if(/\bafghanistan\b/.test(n)) return 'afghanistan';
+ if(/\bireland\b/.test(n)) return 'ireland';
+ if(/\bzimbabwe\b/.test(n)) return 'zimbabwe';
+ if(/\bnamibia\b/.test(n)) return 'namibia';
+ if(/\b(united\s+arab\s+emirates|uae)\b/.test(n)) return 'united arab emirates';
+ return '';
+}
+function fallbackTeamLogo(name, rawTeam){
+ const flag=typeof rawTeam==='object' ? pick(rawTeam,['flag','flag_url','flagUrl','country_flag','countryFlag'],'') : '';
+ const fu=typeof flag==='string' && (/^https?:\/\//i.test(flag.trim())||flag.trim().startsWith('//')) ? (flag.trim().startsWith('//')?'https:'+flag.trim():flag.trim()) : '';
+ if(fu) return fu;
+ const key=logoKey(name);
+ if(key && STATIC_TEAM_LOGOS[key]) return STATIC_TEAM_LOGOS[key];
+ // Last-resort visual fallback for associate/domestic teams: country flag.
+ // This is a static image request, not a CricLive API request.
+ const n=String(name||'').toLowerCase();
+ const countryCodes={
+   'namibia':'na','united arab emirates':'ae','uae':'ae','south korea':'kr','korea':'kr',
+   'indonesia':'id','south africa':'za','new zealand':'nz','west indies':'jm',
+   'sri lanka':'lk','bangladesh':'bd','pakistan':'pk','india':'in','australia':'au',
+   'england':'gb-eng','ireland':'ie','afghanistan':'af','zimbabwe':'zw',
+   'nepal':'np','oman':'om','canada':'ca','usa':'us','united states':'us',
+   'scotland':'gb-sct','netherlands':'nl','uganda':'ug','tanzania':'tz',
+   'hong kong':'hk','japan':'jp','fiji':'fj','papua new guinea':'pg',
+   'cook islands':'ck','vanuatu':'vu'
+ };
+ const code=Object.keys(countryCodes).find(k=>n===k||n.includes(k));
+ return code ? `https://flagcdn.com/w160/${countryCodes[code]}.png` : '';
+}
+function scalarText(v, fallback=''){
+ if(v===undefined||v===null||v==='') return fallback;
+ if(typeof v==='string'||typeof v==='number') return String(v);
+ if(Array.isArray(v)){
+   const parts=v.map(x=>scalarText(x,'')).filter(Boolean);
+   return parts.join(' • ') || fallback;
+ }
+ if(typeof v==='object'){
+   const s=pick(v,['name','full_name','title','label','text','result','status'],'');
+   return scalarText(s,fallback);
+ }
+ return fallback;
 }
 function normalize(raw){
  return arr(raw).map((m,i)=>{
-  const h=m.first_team||m.home_team||m.team1||m.home||{},a=m.second_team||m.away_team||m.team2||m.away||{};
-  const tn=(x,d)=>typeof x==="string"?x:pick(x,["full_name","name","team_name","title"],d);
-  const tl=x=>typeof x==="object"?pick(x,["logo","logo_url","image","team_logo"],""):"";
-  return {raw:m,id:pick(m,["match_id","matchId","id"],i),title:pick(m,["match_desc","match_name","title","name"],"Cricket Match"),series:pick(m,["series_name","series","tournament"],""),status:pick(m,["state","status","match_status"],""),start:pick(m,["start_time","startTime","date","match_date","scheduled_at"],""),venue:pick(m,["venue","venue_name","ground"],""),home:{name:tn(h,pick(m,["home_team_name","team1_name"],"Team 1")),logo:tl(h)},away:{name:tn(a,pick(m,["away_team_name","team2_name"],"Team 2")) ,logo:tl(a)},score:pick(m,["score","live_score","current_score","score_text"],""),homeScore:pick(m,["team1_score","home_score","first_team_score"],""),awayScore:pick(m,["team2_score","away_score","second_team_score"],""),overs:pick(m,["overs","current_overs"],""),crr:pick(m,["crr","current_run_rate"],""),rrr:pick(m,["rrr","required_run_rate"],""),lastBall:pick(m,["last_ball","lastBall","latest_ball"],"")};
+  const h=teamObj(m,'home'), a=teamObj(m,'away');
+  const teamScore=(team, root, keys)=>{
+    const v=deepFirst(team,['score','live_score','current_score','score_text']);
+    const r=v!==''&&v!=null?v:deepFirst(root,keys);
+    if(r===undefined||r===null||r==='') return '';
+    if(typeof r==='object'){
+      const runs=deepFirst(r,['runs','run']);
+      const wickets=deepFirst(r,['wickets','wicket']);
+      const ov=deepFirst(r,['overs','over']);
+      if(runs!==''&&runs!=null){
+        let z=String(runs)+(wickets!==''&&wickets!=null?'/'+String(wickets):'');
+        if(ov!==''&&ov!=null) z += ' ('+String(ov)+' ov)';
+        return z;
+      }
+    }
+    return scalarText(r,'');
+  };
+  const status=scalarText(pick(m,['status','state','match_status','short_status','status_detail'],''),'');
+  const statusDetail=scalarText(pick(m,['status_detail','statusDetail','short_status','result','result_text','winner','winning_team'],''),'');
+  const rawStart = scalarText(pick(m,['start_time','startTime','date','match_date','scheduled_at','startDateTime','start_datetime','match_datetime','datetime','date_time','scheduled_start','start','match_start_time','match_start_datetime','start_date_time'],''),'') || scalarText(deepFirst(m,['start_time','startTime','date','match_date','scheduled_at','startDateTime','start_datetime','match_datetime','datetime','date_time','scheduled_start','start','match_start_time','match_start_datetime','start_date_time'],8),'');
+  const separateDate = scalarText(pick(m,['start_date','match_start_date','scheduled_date'],''),'');
+  const separateTime = scalarText(pick(m,['start_clock','match_start_time_text','scheduled_time','start_time_text'],''),'');
+  const startValue = rawStart || ([separateDate,separateTime].filter(Boolean).join(' '));
+  return {
+    raw:m,
+    id:pick(m,['match_id','matchId','id'],i),
+    title:scalarText(pick(m,['match_desc','match_name','title','name'],'Cricket Match'),'Cricket Match'),
+    series:scalarText(pick(m,['series_name','series','tournament'],'') ,''),
+    status,
+    statusDetail,
+    result:scalarText(pick(m,['result','result_text','winner','winning_team','status_detail','short_status'],''),''),
+    start:startValue,
+    end:scalarText(pick(m,['end_time','endTime','end_date','endDateTime','end_datetime','match_end_time','match_end_datetime','end_date_time'],''),'') || scalarText(deepFirst(m,['end_time','endTime','end_date','endDateTime','end_datetime','match_end_time','match_end_datetime','end_date_time'],8),'') || '',
+    venue:scalarText(pick(m,['venue','venue_name','ground'],'') ,''),
+    home:{name:teamName(h,scalarText(pick(m,['home_team_name','team1_name','first_team_name'],'Team 1'),'Team 1')),logo:teamLogo(h),raw:h},
+    away:{name:teamName(a,scalarText(pick(m,['away_team_name','team2_name','second_team_name'],'Team 2'),'Team 2')),logo:teamLogo(a),raw:a},
+    score:'',
+    homeScore:teamScore(h,m,['team1_score','home_score','first_team_score']),
+    awayScore:teamScore(a,m,['team2_score','away_score','second_team_score']),
+    overs:deepFirst(m,['overs','current_overs']),
+    crr:deepFirst(m,['crr','current_run_rate']),
+    rrr:deepFirst(m,['rrr','required_run_rate']),
+    lastBall:deepFirst(m,['last_ball','lastBall','latest_ball'])
+  };
  });
 }
 function live(m){
- const s=String(m.status).toLowerCase();
- return s.includes("live")||s.includes("in progress")||s.includes("started")||s.includes("playing")||s.includes("innings")||s==="1"||s==="2";
+ const s=[m.status,m.statusDetail,m.raw?.state,m.raw?.status,m.raw?.short_status,m.raw?.status_detail].map(x=>String(x??'').toLowerCase()).join(' | ');
+ return s.includes('live')||s.includes('in progress')||s.includes('started')||s.includes('playing')||s.includes('innings')||s.includes('ongoing')||s==='1'||s==='2';
 }
 function done(m){
- const s=String(m.status).toLowerCase();
- return s.includes("complete")||s.includes("completed")||s.includes("finished")||s.includes("result")||s.includes("ended")||s.includes("abandoned")||s.includes("cancelled")||s.includes("canceled")||s.includes("no result");
+ const s=[m.status,m.statusDetail,m.result,m.raw?.state,m.raw?.status,m.raw?.short_status,m.raw?.status_detail].map(x=>String(x??'').toLowerCase()).join(' | ');
+ return s.includes('complete')||s.includes('completed')||s.includes('finished')||s.includes('result')||s.includes('ended')||s.includes('abandoned')||s.includes('cancelled')||s.includes('canceled')||s.includes('no result')||s.includes('won by')||s.includes('draw')||s.includes('tie');
 }
-function future(m){return !live(m)&&!done(m)}
+function parseDateValue(v){
+  if(v===undefined||v===null||v==='') return NaN;
+  if(typeof v==='number') return v<100000000000?v*1000:v;
+  const text=String(v).trim();
+  if(!text) return NaN;
+  if(/^\d{10,13}$/.test(text)){
+    const n=Number(text);
+    return text.length===10?n*1000:n;
+  }
+
+  // IMPORTANT: JavaScript Date.parse("Oct 03, 11:30 GMT") defaults to 2001.
+  // CricLive can omit the year in some schedule strings, so add the current
+  // year BEFORE parsing whenever no 4-digit year is present.
+  const hasYear=/\b(?:19|20)\d{2}\b/.test(text);
+  const year=new Date().getFullYear();
+  const candidates=hasYear ? [text] : [`${text} ${year}`, `${year} ${text}`, text];
+  for(const candidate of candidates){
+    const t=Date.parse(candidate);
+    if(Number.isFinite(t)) return t;
+  }
+  return NaN;
+}
+function startMs(m){ return parseDateValue(m?.start); }
+function endMs(m){ return parseDateValue(m?.end); }
+function startedCandidate(m){
+  if(live(m)||done(m)) return false;
+  const t=startMs(m);
+  if(!Number.isFinite(t)) return false;
+  const now=Date.now();
+  return t <= now && now-t <= 6*60*60*1000;
+}
+function future(m){
+  if(live(m)||done(m)) return false;
+  const t=startMs(m);
+  if(Number.isFinite(t)) return t> Date.now();
+  return !startedCandidate(m);
+}
 function unique(list){ const seen=new Set(); return list.filter(m=>{ const k=String(m.id); if(seen.has(k)) return false; seen.add(k); return true; }); }
 async function getJSON(path){
- const r=await fetch(CRICKET_API+path,{cache:"no-store"}),t=await r.text();let j;try{j=JSON.parse(t)}catch{throw Error("Worker returned non-JSON")}
- if(!r.ok||j.success===false)throw Error(j.error||j.message||("HTTP "+r.status));return j;
+ const cached=readEndpointCache(path);
+ if(cached!==null) return cached;
+ consumeApiBudget(path);
+ const r=await fetch(CRICKET_API+path,{method:"GET",mode:"cors",cache:"no-store",headers:{Accept:"application/json"}});
+ const t=await r.text();let j;try{j=JSON.parse(t)}catch{throw Error("Worker returned non-JSON")}
+ if(!r.ok||j.success===false)throw Error(j.error||j.message||( "HTTP "+r.status));
+ writeEndpointCache(path,j);
+ return j;
 }
-function fmt(v){if(!v)return"-";const d=new Date(v);return Number.isNaN(d.getTime())?v:d.toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
+function fmt(v){
+ if(v===undefined||v===null||v==='') return '-';
+ const dMs=parseDateValue(v);
+ if(!Number.isFinite(dMs)) return String(v).trim();
+ const d=new Date(dMs);
+ return d.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'Asia/Kolkata'})+' IST';
+}
 function val(m){
  // Virtual game index only; it has no cash value and is not a payout/withdrawal quote.
  const s=String(m.status).toLowerCase();
@@ -317,24 +716,23 @@ function val(m){
  if(s.includes("wicket"))n-=3;
  return (n/100).toFixed(2)+"x";
 }
-function logo(u){return u?`<img src="${esc(u)}" onerror="this.style.display='none'">`:`<div class="team-logo">🏏</div>`}
+function logo(u,name,rawTeam){
+ const fallback=fallbackTeamLogo(name,rawTeam);
+ const src=u||fallback;
+ if(src) return `<img src="${esc(src)}" alt="${esc(name||'Team')} logo" loading="lazy" onerror="this.outerHTML='<div class=&quot;team-logo&quot;>${esc(teamInitials(name))}</div>'">`;
+ return `<div class="team-logo" title="${esc(name||'Team')} logo">${esc(teamInitials(name))}</div>`;
+}
 function matchName(m){ return `${m.home.name} vs ${m.away.name}`; }
 function scoreText(m, side){
   const v=side==='home'?m.homeScore:m.awayScore;
-  if(v) return String(v);
-  if(m.score) return String(m.score);
-  const raw=m.raw||{};
-  const candidates = side==='home'
-    ? ['team1_score','home_score','first_team_score']
-    : ['team2_score','away_score','second_team_score'];
-  const x=pick(raw,candidates,'');
-  return x ? String(x) : '';
+  if(v) return String(v).trim();
+  return '';
 }
 function liveLine(m){
-  const parts=[];
   const hs=scoreText(m,'home'), as=scoreText(m,'away');
-  if(hs||as){ if(hs) parts.push(`${m.home.name}: ${hs}`); if(as) parts.push(`${m.away.name}: ${as}`); }
-  if(m.overs) parts.push(`Overs: ${m.overs}`);
+  const parts=[];
+  if(hs) parts.push(`${m.home.name}: ${hs}`);
+  if(as) parts.push(`${m.away.name}: ${as}`);
   if(m.crr) parts.push(`CRR: ${m.crr}`);
   if(m.rrr) parts.push(`RRR: ${m.rrr}`);
   return parts.join(' • ');
@@ -356,97 +754,144 @@ function findScoreObjects(root, out=[], depth=0){
 function cleanData(raw){
   return raw?.data ?? raw?.result ?? raw?.response ?? raw;
 }
+function playerRoleMarkers(p){
+ if(!p || typeof p!=="object") return '';
+ const out=[];
+ const role=String(pick(p,['role','player_role','designation','type'],'')).toLowerCase();
+ if(pick(p,['is_captain','captain','isCaptain'],false)===true || role.includes('captain')) out.push('(c)');
+ if(pick(p,['is_vice_captain','vice_captain','viceCaptain'],false)===true || role.includes('vice captain')) out.push('(vc)');
+ if(pick(p,['is_wicketkeeper','is_wicket_keeper','wicket_keeper','wicketkeeper','keeper','wk'],false)===true || role.includes('wicket') || role==='wk') out.push('(wk)');
+ if(pick(p,['is_bowler','bowler'],false)===true || role==='bowler') out.push('(b)');
+ return [...new Set(out)].join(' ');
+}
+function playerNameWithRole(p, fallback='Player'){
+ if(typeof p==='string') return p;
+ const nm=scalarText(pick(p,['name','full_name','player','player_name','batter','batsman','bowler'],'') ,fallback);
+ return `${nm} ${playerRoleMarkers(p)}`.trim();
+}
+function playerRowsFromObject(v){
+ if(!v || typeof v!=="object") return [];
+ const keys=['players','squad','batting','batsmen','batters','bowling','bowlers','current_batsmen','current_batters','current_bowler','current_bowlers'];
+ for(const k of keys){
+   const x=v[k];
+   if(Array.isArray(x) && x.length) return x;
+   if(x && typeof x==='object') return [x];
+ }
+ return [];
+}
 function renderScorecardData(raw, m){
   if(!raw) return '<div class="small">Scorecard data unavailable.</div>';
   const root=cleanData(raw);
-  let html='';
-
-  const addKV=(label,value)=>{
-    if(value===undefined||value===null||value==='') return;
-    html += `<div class="kv"><span>${esc(label)}</span><b>${esc(String(value))}</b></div>`;
+  const seenObj=new Set();
+  const innings=[];
+  const playerArray=(v)=>Array.isArray(v)?v.filter(Boolean):((v&&typeof v==='object')?[v]:[]);
+  const nameOfTeam=(v)=>scalarText(v?.team_name||v?.batting_team||v?.team||v?.name||v?.title,'');
+  const scoreOfInnings=(v)=>{
+    const s=pick(v,['score','score_text','total','innings_score','current_score'],'');
+    if(s) return scalarText(s,'');
+    const r=pick(v,['runs','run'],''); const w=pick(v,['wickets','wicket'],''); const o=pick(v,['overs','over'],'');
+    if(r!==''&&r!==undefined) return `${r}${w!==''&&w!==undefined?'/'+w:''}${o!==''&&o!==undefined?' ('+o+' ov)':''}`;
+    return '';
   };
-
-  // CricLive examples can expose a top-level match object.
-  const match=root?.match;
-  if(match && typeof match==="object"){
-    addKV("Score", pick(match,["score","score_text","live_score","current_score"],""));
-    addKV("Overs", pick(match,["overs","current_overs"],""));
-    addKV("CRR", pick(match,["crr","current_run_rate"],""));
-    addKV("RRR", pick(match,["rrr","required_run_rate"],""));
-    addKV("Last ball", pick(match,["last_ball","lastBall","latest_ball"],""));
-
-    const bats=match.current_batsmen || match.batsmen;
-    if(Array.isArray(bats) && bats.length){
-      html += '<div class="subhead">CURRENT BATSMEN</div>';
-      bats.slice(0,4).forEach(b=>{
-        if(typeof b==="string") addKV("Batsman",b);
-        else addKV(pick(b,["name","player","batter"],"Batsman"),
-                  [pick(b,["runs","score"],""), pick(b,["balls","balls_faced"],"")].filter(x=>x!==''&&x!==undefined).join(" • "));
-      });
+  const walk=(v,depth=0,label='')=>{
+    if(depth>10||v==null) return;
+    if(Array.isArray(v)){ v.forEach(x=>walk(x,depth+1,label)); return; }
+    if(typeof v!=='object') return;
+    const bat=playerArray(v.batting||v.batsmen||v.batters);
+    const bowl=playerArray(v.bowling||v.bowlers);
+    if(bat.length||bowl.length){
+      const team=nameOfTeam(v)||label||'';
+      const score=scoreOfInnings(v);
+      const key=team+'|'+score+'|'+bat.length+'|'+bowl.length+'|'+(v.innings||v.name||'');
+      if(!seenObj.has(key)){seenObj.add(key);innings.push({team,score,bat,bowl,extras:v.extras||v.extra||null,fall:v.fall_of_wickets||v.fallOfWickets||v.fow||null,label:scalarText(v.innings||v.name||v.title,'')});}
     }
-    const bow=match.current_bowler || match.bowler;
-    if(bow && typeof bow==="object"){
-      html += '<div class="subhead">CURRENT BOWLER</div>';
-      addKV(pick(bow,["name","player","bowler"],"Bowler"),
-            [pick(bow,["overs"],""),pick(bow,["runs"],""),pick(bow,["wickets"],"")].filter(x=>x!==''&&x!==undefined).join(" • "));
-    }
-  }
-
-  const scoreObjects=findScoreObjects(root);
-  const seen=new Set();
-  for(const x of scoreObjects.slice(0,80)){
-    const name=pick(x,["team","team_name","batting_team","name","title"],"");
-    const score=pick(x,["score","score_text","live_score","current_score"],"");
-    const runs=x.runs!==undefined?x.runs:'';
-    const wickets=x.wickets!==undefined?x.wickets:'';
-    const overs=x.overs!==undefined?x.overs:'';
-    const crr=pick(x,["crr","current_run_rate"],"");
-    const rrr=pick(x,["rrr","required_run_rate"],"");
-    const key=JSON.stringify([name,score,runs,wickets,overs,crr,rrr]);
-    if(seen.has(key)) continue;
-    seen.add(key);
-    if(name || score || runs!=='' || wickets!=='' || overs!=='' || crr || rrr){
-      if(name || score || runs!=='' || wickets!=='' || overs!==''){
-        const scoreVal=score || (runs!=='' ? `${runs}${wickets!==''?'/'+wickets:''}` : '');
-        if(name && scoreVal) addKV(name, overs!==''?`${scoreVal} (${overs} ov)`:scoreVal);
-        else if(scoreVal) addKV("Score",overs!==''?`${scoreVal} (${overs} ov)`:scoreVal);
-      }
-      if(crr) addKV("CRR",crr);
-      if(rrr) addKV("RRR",rrr);
-    }
-  }
-
-  // Batting/bowling tables when the provider returns innings data.
-  const inningsCandidates=[];
-  const walk=(v,d=0)=>{
-    if(d>8||v==null)return;
-    if(Array.isArray(v)){ v.forEach(x=>walk(x,d+1)); return; }
-    if(typeof v!=="object")return;
-    if(Array.isArray(v.batting)) inningsCandidates.push({type:"batting",rows:v.batting});
-    if(Array.isArray(v.bowling)) inningsCandidates.push({type:"bowling",rows:v.bowling});
-    Object.values(v).forEach(x=>walk(x,d+1));
+    const nextLabel=nameOfTeam(v)||label;
+    Object.entries(v).forEach(([k,x])=>{ if(k!=='batting'&&k!=='batsmen'&&k!=='batters'&&k!=='bowling'&&k!=='bowlers') walk(x,depth+1,nextLabel); });
   };
   walk(root);
-  const renderedSections=new Set();
-  for(const sec of inningsCandidates){
-    if(renderedSections.has(sec.type)) continue;
-    const rows=sec.rows.filter(Boolean).slice(0,15);
-    if(!rows.length) continue;
-    renderedSections.add(sec.type);
-    html += `<div class="subhead">${sec.type==="batting"?"BATTING":"BOWLING"}</div>`;
-    rows.forEach(r=>{
-      if(typeof r==="string") addKV(sec.type==="batting"?"Batter":"Bowler",r);
-      else {
-        const nm=pick(r,["name","player","batter","bowler"],"");
-        const vals=sec.type==="batting"
-          ? [pick(r,["runs","score"],""),pick(r,["balls","balls_faced"],""),pick(r,["fours","4s"],""),pick(r,["sixes","6s"],"")].filter(x=>x!==''&&x!==undefined)
-          : [pick(r,["overs"],""),pick(r,["maidens"],""),pick(r,["runs"],""),pick(r,["wickets"],"")].filter(x=>x!==''&&x!==undefined);
-        if(nm||vals.length) addKV(nm || (sec.type==="batting"?"Batter":"Bowler"),vals.join(" • "));
+
+  // Some provider responses wrap innings in a scorecard/innings array.
+  const directInnings=[];
+  const findArrays=(v,d=0)=>{
+    if(d>8||v==null) return;
+    if(Array.isArray(v)){ v.forEach(x=>findArrays(x,d+1)); return; }
+    if(typeof v!=='object') return;
+    for(const k of ['innings','scorecard','scorecards']){
+      if(Array.isArray(v[k])) v[k].forEach(x=>{ if(x&&typeof x==='object') directInnings.push(x); });
+    }
+    Object.values(v).forEach(x=>findArrays(x,d+1));
+  };
+  findArrays(root);
+  directInnings.forEach(x=>walk(x,0,nameOfTeam(x)));
+
+  let html='';
+  const current= root?.match || root?.live || null;
+  if(current && typeof current==='object'){
+    const score=pick(current,['score','score_text','live_score','current_score'],'');
+    const overs=pick(current,['overs','current_overs'],'');
+    const crr=pick(current,['crr','current_run_rate'],'');
+    const rrr=pick(current,['rrr','required_run_rate'],'');
+    if(score||overs||crr||rrr){
+      html += '<div class="score-summary">';
+      if(score) html += `<div><span>Score</span><b>${esc(scalarText(score,''))}</b></div>`;
+      if(overs) html += `<div><span>Overs</span><b>${esc(scalarText(overs,''))}</b></div>`;
+      if(crr) html += `<div><span>CRR</span><b>${esc(scalarText(crr,''))}</b></div>`;
+      if(rrr) html += `<div><span>RRR</span><b>${esc(scalarText(rrr,''))}</b></div>`;
+      html += '</div>';
+    }
+  }
+
+  const table=(title,rows,type)=>{
+    if(!rows.length) return '';
+    let h=`<div class="score-section"><div class="subhead">${esc(title)}</div><div class="score-table">`;
+    if(type==='bat'){
+      h+='<div class="score-tr score-th"><span>BATTER</span><span>R</span><span>B</span><span>4s</span><span>6s</span><span>SR</span></div>';
+      rows.forEach(r=>{
+        if(typeof r==='string'){h+=`<div class="score-tr"><span>${esc(r)}</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span></div>`;return;}
+        const nm=playerNameWithRole(r,'Batter');
+        const runs=pick(r,['runs','score'],'—'), balls=pick(r,['balls','balls_faced','ballsFaced'],'—');
+        const fours=pick(r,['fours','4s','four'],'—'), sixes=pick(r,['sixes','6s','six'],'—');
+        const sr=pick(r,['strike_rate','strikeRate','sr'],'—');
+        const dismissal=pick(r,['dismissal','dismissed_by','out_text','how_out'],'');
+        h+=`<div class="score-tr"><span><b>${esc(nm)}</b>${dismissal?`<small>${esc(scalarText(dismissal,''))}</small>`:''}</span><span>${esc(scalarText(runs,'—'))}</span><span>${esc(scalarText(balls,'—'))}</span><span>${esc(scalarText(fours,'—'))}</span><span>${esc(scalarText(sixes,'—'))}</span><span>${esc(scalarText(sr,'—'))}</span></div>`;
+      });
+    }else{
+      h+='<div class="score-tr score-th"><span>BOWLER</span><span>O</span><span>M</span><span>R</span><span>W</span><span>ECO</span></div>';
+      rows.forEach(r=>{
+        if(typeof r==='string'){h+=`<div class="score-tr"><span>${esc(r)}</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span></div>`;return;}
+        const nm=playerNameWithRole(r,'Bowler');
+        const ov=pick(r,['overs','over'],'—'), maid=pick(r,['maidens','maiden'],'—'), runs=pick(r,['runs','conceded'],'—'), wk=pick(r,['wickets','wicket'],'—'), eco=pick(r,['economy','economy_rate','econ'],'—');
+        h+=`<div class="score-tr"><span><b>${esc(nm)}</b></span><span>${esc(scalarText(ov,'—'))}</span><span>${esc(scalarText(maid,'—'))}</span><span>${esc(scalarText(runs,'—'))}</span><span>${esc(scalarText(wk,'—'))}</span><span>${esc(scalarText(eco,'—'))}</span></div>`;
+      });
+    }
+    return h+'</div></div>';
+  };
+
+  if(innings.length){
+    innings.forEach((inn,i)=>{
+      const title=inn.team || inn.label || `Innings ${i+1}`;
+      html+=`<div class="innings-card"><div class="innings-title"><b>${esc(title)}</b>${inn.score?`<strong>${esc(inn.score)}</strong>`:''}</div>`;
+      html+=table('BATTING',inn.bat,'bat');
+      html+=table('BOWLING',inn.bowl,'bowl');
+      if(inn.extras && typeof inn.extras==='object'){
+        const ex=Object.entries(inn.extras).filter(([,v])=>v!==''&&v!==null&&v!==undefined).map(([k,v])=>`${k}: ${scalarText(v,'')}`).join(' • ');
+        if(ex) html+=`<div class="small score-extra"><b>Extras:</b> ${esc(ex)}</div>`;
       }
+      html+='</div>';
     });
   }
 
-  return html || '<div class="small">CricLive ne is match ke liye score fields return nahi kiye.</div>';
+  if(!html){
+    const scoreObjects=findScoreObjects(root);
+    for(const x of scoreObjects.slice(0,20)){
+      const name=pick(x,['team','team_name','batting_team','name','title'],'');
+      const score=pick(x,['score','score_text','live_score','current_score'],'');
+      const runs=x.runs!==undefined?x.runs:''; const wickets=x.wickets!==undefined?x.wickets:''; const overs=x.overs!==undefined?x.overs:'';
+      const scoreVal=score || (runs!==''?`${runs}${wickets!==''?'/'+wickets:''}`:'');
+      if(name||scoreVal) html+=`<div class="kv"><span>${esc(scalarText(name,'Score'))}</span><b>${esc(scoreVal)}${overs!==''?` (${esc(scalarText(overs,''))} ov)`:''}</b></div>`;
+    }
+  }
+  return html || '<div class="small">CricLive ne is match ke liye detailed scorecard fields return nahi kiye.</div>';
 }
 function renderCommentary(raw){
   if(!raw) return '<div class="small">Commentary unavailable.</div>';
@@ -472,149 +917,447 @@ function renderCommentary(raw){
   walk(root);
   return texts.slice(-20).reverse().map((t,i)=>`<div class="commentary-line"><span>${i+1}</span><b>${esc(t)}</b></div>`).join('') || '<div class="small">Commentary data unavailable.</div>';
 }
-async function loadDetailsExtras(m){
-  const key=String(m.id);
-  if(detailCache.has(key)) return detailCache.get(key);
-  const p=(async()=>{
-    const [sr,cr]=await Promise.allSettled([
-      getJSON(`/api/cricket/match/${encodeURIComponent(key)}/scorecard`),
-      getJSON(`/api/cricket/match/${encodeURIComponent(key)}/commentary`)
-    ]);
-    return {
-      scorecard:sr.status==='fulfilled'?sr.value:null,
-      commentary:cr.status==='fulfilled'?cr.value:null,
-      scorecardError:sr.status==='rejected'?sr.reason?.message:'',
-      commentaryError:cr.status==='rejected'?cr.reason?.message:''
-    };
-  })();
-  detailCache.set(key,p); return p;
+async function loadScorecardOnly(m){
+ const key=String(m.id);
+ const path=`/api/cricket/match/${encodeURIComponent(key)}/scorecard`;
+ const cached=readEndpointCache(path);
+ if(cached!==null) return {scorecard:cached,scorecardError:''};
+ try{
+   return {scorecard:await getJSON(path),scorecardError:''};
+ }catch(e){
+   return {scorecard:null,scorecardError:e?.message||String(e)};
+ }
 }
-async function loadDetailsExtras(m){
-  const key=String(m.id);
-  if(detailCache.has(key)) return detailCache.get(key);
-  const p=(async()=>{
-    const [sr,cr]=await Promise.allSettled([getJSON(`/api/cricket/match/${encodeURIComponent(key)}/scorecard`),getJSON(`/api/cricket/match/${encodeURIComponent(key)}/commentary`)]);
-    return {scorecard:sr.status==='fulfilled'?sr.value:null,commentary:cr.status==='fulfilled'?cr.value:null,scorecardError:sr.status==='rejected'?sr.reason?.message:'',commentaryError:cr.status==='rejected'?cr.reason?.message:''};
-  })();
-  detailCache.set(key,p); return p;
+async function loadCommentaryOnly(m){
+ const key=String(m.id);
+ const path=`/api/cricket/match/${encodeURIComponent(key)}/commentary`;
+ const cached=readEndpointCache(path);
+ if(cached!==null) return {commentary:cached,commentaryError:''};
+ try{
+   return {commentary:await getJSON(path),commentaryError:''};
+ }catch(e){
+   return {commentary:null,commentaryError:e?.message||String(e)};
+ }
 }
+
 function render(){
  const list=cache[currentTab]||[];
  $("sectionTitle").textContent=currentTab==="LIVE"?"Live Matches":currentTab==="UPCOMING"?"Upcoming Matches":"Completed Matches";
- $("matches").innerHTML=list.length?list.map(m=>`
+ $("matches").innerHTML=list.length?list.map(m=>{
+  const isUpcoming=currentTab==="UPCOMING";
+  const isCompleted=currentTab==="COMPLETED";
+  return `
  <article class="match">
-  <div class="match-head"><div class="row"><div class="series">${esc(m.series||m.title)}</div><span class="badge ${live(m)?"live":""}">${live(m)?"● LIVE":esc(m.status||"UPCOMING")}</span></div></div>
+  <div class="match-head"><div class="row"><div class="series">${esc(m.series||m.title)}</div><span class="badge ${live(m)?"live":""}">${live(m)?"● LIVE":isCompleted?"✓ FINISHED":esc(m.status||"UPCOMING")}</span></div></div>
   <div class="teams">
    <div class="match-vs-title">${esc(matchName(m))}</div>
-   <div class="team"><div class="team-left">${logo(m.home.logo)}<div class="team-name">${esc(m.home.name)}</div></div><div class="score">${esc(scoreText(m,'home'))}</div></div>
-   <div class="team"><div class="team-left">${logo(m.away.logo)}<div class="team-name">${esc(m.away.name)}</div></div><div class="score">${esc(scoreText(m,'away'))}</div></div>
-   <div class="meta">${esc(m.title)} • ${esc(fmt(m.start))}${m.venue?" • "+esc(m.venue):""}</div>
-   ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score loading…')}</div>`:''}
+   <div class="team"><div>${logo(m.home.logo,m.home.name,m.home.raw)}</div><div class="team-info"><div class="team-name">${esc(m.home.name)}</div>${!isUpcoming&&scoreText(m,'home')?`<div class="score">${esc(scoreText(m,'home'))}</div>`:''}</div></div>
+   <div class="team"><div>${logo(m.away.logo,m.away.name,m.away.raw)}</div><div class="team-info"><div class="team-name">${esc(m.away.name)}</div>${!isUpcoming&&scoreText(m,'away')?`<div class="score">${esc(scoreText(m,'away'))}</div>`:''}</div></div>
+   <div class="meta"><b>📅 ${esc(fmt(m.start))}</b>${m.venue?" • 📍 "+esc(m.venue):""}</div>
+   ${live(m)?`<div class="live-scoreline" id="scoreline-${esc(String(m.id))}">${esc(liveLine(m)||'Live score API data me available nahi hai')}</div>`:''}
+   ${isCompleted ? `<div class="live-scoreline"><b>RESULT:</b> ${esc(m.result||deriveResult(m)||'Final result API data me available nahi hai')}</div>`:''}
   </div>
-  <div class="valuebar"><div><div class="value-label">KINGS11 VIRTUAL BHAV / GAME VALUE</div><div class="small">Match state ke saath update hota hai • cash value nahi</div></div><div class="value">${val(m)}</div></div>
-  <div class="actions"><button class="btn join" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN • 500 VC</button><button class="btn details" onclick="details('${encodeURIComponent(String(m.id))}')">MATCH DETAILS</button></div>
- </article>`).join(""):`<div class="small" style="padding:40px;text-align:center">No ${currentTab.toLowerCase()} matches available.</div>`;
- if(currentTab==='LIVE') list.forEach(m=>hydrateLiveCard(m));
+  ${isUpcoming||isCompleted ? '' : `<div class="valuebar"><div><div class="value-label">KINGS11 VIRTUAL BHAV / GAME VALUE</div><div class="small">Match state ke saath update hota hai • cash value nahi</div></div><div class="value">${val(m)}</div></div>`}
+  ${isUpcoming||isCompleted ? '' : `<div class="actions"><button class="btn join" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN • 500 VC</button><button class="btn details" onclick="details('${encodeURIComponent(String(m.id))}')">MATCH DETAILS</button></div>`}
+ </article>`;
+ }).join(""):`<div class="small" style="padding:40px;text-align:center">No ${currentTab.toLowerCase()} matches available.</div>`;
+ if($("adminLiveMatches")) renderAdminLiveMatches();
 }
-async function hydrateLiveCard(m){
+function hydrateLiveCard(m){ /* disabled: prevents automatic API hits */ }
+async function fetchCricketPath(path){
+ const cached=readEndpointCache(path);
+ if(cached!==null) return cached;
+ consumeApiBudget(path);
+ const r=await fetch(CRICKET_API+path,{method:"GET",mode:"cors",cache:"no-store",headers:{Accept:"application/json"}});
+ const text=await r.text();
+ if(!r.ok) throw Error(`${path}: HTTP ${r.status}`);
+ let j; try{j=JSON.parse(text)}catch{throw Error(`${path}: Worker response JSON nahi hai`)}
+ if(j?.success===false) throw Error(`${path}: ${j.error||j.message||"success:false"}`);
+
+ // Never turn a temporary empty live/schedule response into a 30-minute
+ // cache. A real successful response containing matches is cached normally.
+ const n=arr(j).length;
+ if(n>0 || (!path.includes('/live') && !path.includes('/schedule'))) writeEndpointCache(path,j);
+ return j;
+}
+
+let liveLoaded=false, scheduleLoaded=false, scheduleLoading=null;
+
+function readStaleSnapshot(kind){
   try{
-    const d=await getJSON(`/api/cricket/match/${encodeURIComponent(String(m.id))}/scorecard`);
-    const data=cleanData(d);
-    const matchData=data?.match||data;
-    const score=pick(matchData,['score','live_score','current_score','score_text'],'');
-    const crr=pick(data,['crr','current_run_rate'],'');
-    const rrr=pick(data,['rrr','required_run_rate'],'');
-    const overs=pick(data,['overs','current_overs'],'');
-    const line=[score,overs?`Overs: ${overs}`:'',crr?`CRR: ${crr}`:'',rrr?`RRR: ${rrr}`:''].filter(Boolean).join(' • ');
-    const el=$("scoreline-"+String(m.id)); if(el) el.textContent=line||'Live score data unavailable';
-  }catch(e){ const el=$("scoreline-"+String(m.id)); if(el) el.textContent='Live score data unavailable'; }
+    const key=kind==='live'?'kings11_last_live':'kings11_last_schedule';
+    const x=JSON.parse(localStorage.getItem(key)||'null');
+    return x?.data || null;
+  }catch(_){ return null; }
 }
-async function loadMatches(){
- const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),10000);
- $("status").textContent="Cricket data loading…";
- $("matches").innerHTML='<div class="small">Connecting to LIVE + SCHEDULE…</div>';
+function applySavedLiveSnapshot(){
+  const saved=readStaleSnapshot('live');
+  if(!saved) return false;
+  const liveAll=normalize(saved);
+  mergeAndRebuild(liveAll, null);
+  liveLoaded=true;
+  return true;
+}
+function applySavedScheduleSnapshot(){
+  const saved=readStaleSnapshot('schedule');
+  if(!saved) return false;
+  const schedule=normalize(saved);
+  mergeAndRebuild(null, schedule);
+  scheduleLoaded=true;
+  return true;
+}
+const HISTORY_KEY='kings11_match_history_v1';
+function readHistory(){try{const x=JSON.parse(localStorage.getItem(HISTORY_KEY)||'{}');return x&&typeof x==='object'?x:{}}catch(_){return {}}}
+function saveHistory(map){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(map))}catch(_){} }
+function rememberMatches(list, markLive=false){
+  const h=readHistory();
+  for(const m of (list||[])){
+    const k=String(m.id);
+    const old=h[k]||{};
+    h[k]={...old, ...m, raw:m.raw||old.raw, wasLive:old.wasLive||!!markLive, lastSeen:Date.now()};
+  }
+  saveHistory(h);
+  return h;
+}
+function parseRuns(score){
+  if(!score) return NaN;
+  const parts=String(score).match(/(\d+)\s*\/\s*(\d+)/g);
+  if(!parts||!parts.length) return NaN;
+  const last=parts[parts.length-1].match(/(\d+)\s*\/\s*(\d+)/);
+  return last?Number(last[1]):NaN;
+}
+function deriveResult(m){
+  if(m.result) return m.result;
+  const a=parseRuns(m.homeScore), b=parseRuns(m.awayScore);
+  if(!Number.isFinite(a)||!Number.isFinite(b)||a===b) return '';
+  const winner=a>b?m.home.name:m.away.name;
+  const margin=Math.abs(a-b);
+  return `${winner} won by ${margin} runs`;
+}
+const DAY_MS=24*60*60*1000;
+const MATCH_WINDOW_DAYS=7;
+function withinPrevious7Days(m){
+ const t=startMs(m);
+ return Number.isFinite(t) && t>=Date.now()-MATCH_WINDOW_DAYS*DAY_MS && t<=Date.now();
+}
+function withinNext7Days(m){
+ const t=startMs(m);
+ return Number.isFinite(t) && t>Date.now() && t<=Date.now()+MATCH_WINDOW_DAYS*DAY_MS;
+}
+function mergeAndRebuild(liveList=null, scheduleList=null){
+  const map=new Map();
+  const history=readHistory();
+  const liveUpdate=Array.isArray(liveList);
+  const scheduleUpdate=Array.isArray(scheduleList);
+  const liveHasData=liveUpdate && liveList.length>0;
+  const scheduleHasData=scheduleUpdate && scheduleList.length>0;
 
+  const put=(m,prefer=false)=>{
+    if(!m) return;
+    const k=String(m.id);
+    const old=map.get(k);
+    if(!old || prefer) map.set(k,m);
+  };
+
+  // Fresh non-empty API data is authoritative. Empty/failed responses never
+  // erase a previously successful snapshot.
+  if(scheduleHasData) scheduleList.forEach(m=>put(m,false));
+  if(liveHasData) liveList.forEach(m=>put(m,true));
+
+  // Preserve the already displayed successful snapshots and persistent history.
+  cache.LIVE.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
+  cache.UPCOMING.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
+  cache.COMPLETED.forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
+  Object.values(history).forEach(m=>{if(!map.has(String(m.id))) put(m,false)});
+
+  if(liveHasData) rememberMatches(liveList,true);
+  if(scheduleHasData) rememberMatches(scheduleList,false);
+
+  const all=unique([...map.values()]);
+  const liveNow=liveHasData
+    ? unique(liveList.filter(live))
+    : unique(cache.LIVE.filter(live));
+  const liveIds=new Set(liveNow.map(m=>String(m.id)));
+
+  // A completed match is supported by explicit API status/result, a known
+  // end-time, or (when a fresh non-empty LIVE snapshot is authoritative)
+  // disappearance of a match that was previously known to be LIVE.
+  const explicitDone=all.filter(done);
+  const endedByTime=all.filter(m=>{
+    const e=endMs(m);
+    return Number.isFinite(e) && e<=Date.now() && !liveIds.has(String(m.id));
+  });
+
+  const completed=unique([
+    ...explicitDone,
+    ...endedByTime
+  ]).filter(m=>!liveIds.has(String(m.id)));
+
+  if(liveHasData){
+    for(const old of Object.values(history)){
+      const id=String(old.id);
+      if(liveIds.has(id) || !old.wasLive) continue;
+      if(future(old)) continue;
+
+      const oldEnd=endMs(old);
+      const oldExplicitDone=done(old);
+      const age=Date.now()-startMs(old);
+
+      // If the authoritative LIVE snapshot no longer contains a previously
+      // live match, treat it as finished when the API also has a known end
+      // time/result OR it has been running long enough that disappearance is
+      // a credible finish signal. This prevents a live match from lingering
+      // forever in LIVE after the API moves it out.
+      if(oldExplicitDone || (Number.isFinite(oldEnd)&&oldEnd<=Date.now()) ||
+         (Number.isFinite(age)&&age>=6*60*60*1000)){
+        if(!completed.some(m=>String(m.id)===id)){
+          const copy={
+            ...old,
+            status:'Finished',
+            state:'Finished',
+            statusDetail:old.statusDetail||'Finished',
+            result:old.result||deriveResult(old)
+          };
+          completed.push(copy);
+        }
+      }
+    }
+  }
+
+  // Persistent history can also restore a finished match after a refresh,
+  // but only when there is explicit finished/end-time evidence.
+  for(const old of Object.values(history)){
+    const id=String(old.id);
+    if(liveIds.has(id)) continue;
+    if(!withinPrevious7Days(old)) continue;
+    const oldEnd=endMs(old);
+    const oldExplicitDone=done(old);
+    if(oldExplicitDone || (Number.isFinite(oldEnd) && oldEnd<=Date.now())){
+      if(!completed.some(m=>String(m.id)===id)){
+        completed.push({
+          ...old,
+          status:'Finished',
+          state:'Finished',
+          statusDetail:old.statusDetail||'Finished',
+          result:old.result||deriveResult(old)
+        });
+      }
+    }
+  }
+
+  // Upcoming is always derived from the complete schedule snapshot and the
+  // next-7-day time window. A match already represented as LIVE is excluded.
+  const upcoming=unique(
+    all.filter(m=>!liveIds.has(String(m.id)) && withinNext7Days(m) && !done(m))
+  ).sort((a,b)=>(startMs(a)||Infinity)-(startMs(b)||Infinity));
+
+  // Fresh non-empty LIVE response replaces LIVE. Empty/error responses retain
+  // the last successful LIVE snapshot.
+  if(liveHasData){
+    cache.LIVE=liveNow;
+  }
+
+  cache.UPCOMING=upcoming;
+  cache.COMPLETED=unique(completed)
+    .filter(m=>!liveIds.has(String(m.id)))
+    .sort((a,b)=>(startMs(b)||0)-(startMs(a)||0))
+    .map(m=>({...m,result:m.result||deriveResult(m)}));
+}
+let boundaryTimer=null;
+let boundaryTimerToken=0;
+
+function scheduleApiBoundaryRefresh(){
+  if(boundaryTimer) { clearTimeout(boundaryTimer); boundaryTimer=null; }
+  const token=++boundaryTimerToken;
+  const now=Date.now();
+
+  // Only schedule one controlled API refresh: the nearest upcoming start or
+  // known end boundary. This is not polling. It fires once at a meaningful
+  // match-state boundary, then the next boundary is scheduled from the new
+  // API data. Existing 30-minute endpoint caching and the rolling hit guard
+  // still apply.
+  const candidates=[
+    ...((cache.UPCOMING||[]).map(m=>({t:startMs(m),kind:'start'}))),
+    ...((cache.LIVE||[]).map(m=>({t:endMs(m),kind:'end'})))
+  ].filter(x=>Number.isFinite(x.t) && x.t>now);
+
+  if(!candidates.length) return;
+  candidates.sort((a,b)=>a.t-b.t);
+  const next=candidates[0];
+  const delay=Math.max(1000,Math.min(next.t-now+1500,24*60*60*1000));
+
+  boundaryTimer=setTimeout(async()=>{
+    if(token!==boundaryTimerToken) return;
+    // Force exactly one fresh LIVE request at the boundary. This bypasses the
+    // 30-minute cache only for this scheduled state transition.
+    try{
+      const liveRaw=await fetchCricketPathFresh("/api/cricket/live");
+      const liveAll=normalize(liveRaw);
+      if(liveAll.length>0){
+        mergeAndRebuild(liveAll,null);
+        localStorage.setItem("kings11_last_live",JSON.stringify({ts:Date.now(),data:liveRaw}));
+      }
+    }catch(_){
+      // Never erase existing data on a boundary refresh failure.
+    }
+    updateStatus();
+    render();
+    scheduleApiBoundaryRefresh();
+  },delay);
+}
+
+async function fetchCricketPathFresh(path){
+  consumeApiBudget(path);
+  const r=await fetch(CRICKET_API+path,{
+    method:"GET",mode:"cors",cache:"no-store",
+    headers:{Accept:"application/json"}
+  });
+  const text=await r.text();
+  if(!r.ok) throw Error(`${path}: HTTP ${r.status}`);
+  let j; try{j=JSON.parse(text)}catch{throw Error(`${path}: Worker response JSON nahi hai`)}
+  if(j?.success===false) throw Error(`${path}: ${j.error||j.message||"success:false"}`);
+  // Do not write empty live responses into the endpoint cache.
+  if(responseMatchCount(j)>0) writeEndpointCache(path,j);
+  return j;
+}
+
+function updateStatus(){
+ const b=budgetState();
+ $("status").textContent=
+   `CricLive • ${cache.LIVE.length} LIVE • ${cache.UPCOMING.length} UPCOMING (next 7d) • ${cache.COMPLETED.length} FINISHED (last 7d) • API guard ${b.used}/${API_BUDGET_MAX}`;
+ $("lastUpdated").textContent="Updated "+new Date().toLocaleTimeString("en-IN");
+}
+
+async function refreshLiveNow(){
+  // Manual refresh respects the 30-minute endpoint cache. It never clears
+  // currently displayed data. A fresh request is made only after the cache TTL.
+  await Promise.allSettled([loadLiveOnly(true), loadScheduleOnly(true)]);
+  updateStatus();
+  render();
+}
+
+async function loadLiveOnly(force=false){
+ if(liveLoaded && !force) { render(); return; }
  try{
-   const fetchOne=async(path)=>{
-     const r=await fetch(CRICKET_API+path,{method:"GET",mode:"cors",cache:"no-store",signal:controller.signal,headers:{Accept:"application/json"}});
-     const text=await r.text();
-     if(!r.ok) throw Error(`${path}: HTTP ${r.status}`);
-     let j;
-     try{j=JSON.parse(text)}catch{throw Error(`${path}: Worker response JSON nahi hai`)}
-     if(j?.success===false) throw Error(`${path}: ${j.error||j.message||"success:false"}`);
-     return j;
-   };
+   const liveRaw=await fetchCricketPath("/api/cricket/live");
+   const liveAll=normalize(liveRaw);
+   const nextLive=unique(liveAll.filter(live));
 
-   const [lr,sr]=await Promise.allSettled([
-     fetchOne("/api/cricket/live"),
-     fetchOne("/api/cricket/schedule")
-   ]);
-
-   if(lr.status==="rejected" && sr.status==="rejected"){
-     const a=lr.reason?.message||"LIVE failed", b=sr.reason?.message||"SCHEDULE failed";
-     throw Error(a+" | "+b);
-   }
-
-   const liveRaw=lr.status==="fulfilled"?lr.value:null;
-   const scheduleRaw=sr.status==="fulfilled"?sr.value:null;
-
-   const liveAll=liveRaw?normalize(liveRaw):[];
-   const schedule=scheduleRaw?normalize(scheduleRaw):[];
-   const all=unique([...liveAll,...schedule]);
-
-   cache.LIVE=all.filter(live);
-   cache.UPCOMING=all.filter(future);
-   cache.COMPLETED=all.filter(done);
-
-   const failed=[];
-   if(lr.status==="rejected")failed.push("LIVE failed: "+lr.reason.message);
-   if(sr.status==="rejected")failed.push("SCHEDULE failed: "+sr.reason.message);
-
-   $("status").textContent=
-     `CricLive • ${cache.LIVE.length} LIVE • ${cache.UPCOMING.length} UPCOMING • ${cache.COMPLETED.length} FINISHED`+
-     (failed.length?" • "+failed.join(" | "):"");
-
-   $("lastUpdated").textContent="Updated "+new Date().toLocaleTimeString("en-IN");
-
-   if(!all.length){
-     $("matches").innerHTML=`<div class="card"><h3>Worker response received, but matches not detected</h3><details open><summary>Diagnostic response</summary><pre>${esc(JSON.stringify({live:liveRaw,schedule:scheduleRaw},null,2).slice(0,12000))}</pre></details></div>`;
+   if(nextLive.length>0){
+     // Only a non-empty successful LIVE snapshot is allowed to replace the
+     // current LIVE list. This prevents transient empty responses from making
+     // the UI show LIVE = 0.
+     mergeAndRebuild(liveAll, null);
+     scheduleApiBoundaryRefresh();
+     localStorage.setItem("kings11_last_live", JSON.stringify({ts:Date.now(), data:liveRaw}));
    }else{
-     render();
+     // Keep the previous successful LIVE data. Do not overwrite it with [].
+     // Schedule data can still move a match to COMPLETED when there is explicit
+     // finished/end-time evidence.
+     const saved=readStaleSnapshot('live');
+     if(!cache.LIVE.length && saved) applySavedLiveSnapshot();
    }
+   liveLoaded=true;
+   updateStatus();
+   render();
+   scheduleApiBoundaryRefresh();
  }catch(e){
-   $("status").textContent="KINGS11 diagnostic — data request failed";
-   $("matches").innerHTML=`<div class="card"><h3>Exact problem</h3><div class="small">${esc(e.message||String(e))}</div><div class="small" style="margin-top:10px">Loading ab permanently nahi rukega. Is message se pata chalega ki browser fetch/CORS issue hai ya response parsing issue.</div></div>`;
- }finally{
-   clearTimeout(timer);
+   // Network/429/Worker failure: preserve current or last successful snapshot.
+   if(!cache.LIVE.length) applySavedLiveSnapshot();
+   updateStatus();
+   render();
  }
-}async function details(enc){
+}
+
+async function loadScheduleOnly(force=false){
+ if(scheduleLoaded && !force) { render(); return; }
+ if(scheduleLoading) return scheduleLoading;
+
+ scheduleLoading=(async()=>{
+   try{
+     const scheduleRaw=await fetchCricketPath("/api/cricket/schedule");
+     const schedule=normalize(scheduleRaw);
+     const list=unique(schedule);
+
+     // Never erase a useful schedule with an empty upstream response.
+     if(list.length>0){
+       mergeAndRebuild(null, list);
+       scheduleApiBoundaryRefresh();
+       localStorage.setItem("kings11_last_schedule", JSON.stringify({ts:Date.now(), data:scheduleRaw}));
+     }else{
+       applySavedScheduleSnapshot();
+     }
+     scheduleLoaded=true;
+     updateStatus();
+     render();
+   }catch(e){
+     if(applySavedScheduleSnapshot()){
+       updateStatus(); render();
+       return;
+     }
+     updateStatus();
+     render();
+   }finally{
+     scheduleLoading=null;
+   }
+ })();
+
+ return scheduleLoading;
+}
+
+// Initial page loads LIVE + SCHEDULE once. Both endpoints are cached for
+// 30 minutes, so reloads/tab changes during that window make zero API hits.
+async function loadMatches(){
+  await Promise.allSettled([loadLiveOnly(), loadScheduleOnly()]);
+  scheduleApiBoundaryRefresh();
+}
+
+async function details(enc){
  const m=[...cache.LIVE,...cache.UPCOMING,...cache.COMPLETED].find(x=>String(x.id)===decodeURIComponent(enc));if(!m)return;
  $("modalTitle").textContent=matchName(m);
  $("modalBody").innerHTML=`
- <div class="card"><div class="kv"><span>Series</span><b>${esc(m.series||"-")}</b></div><div class="kv"><span>Match</span><b>${esc(m.title||"-")}</b></div><div class="kv"><span>Status</span><b>${esc(m.status||"-")}</b></div><div class="kv"><span>Start</span><b>${esc(fmt(m.start))}</b></div><div class="kv"><span>Venue</span><b>${esc(m.venue||"-")}</b></div></div>
- <div class="card"><h3>LIVE SCORECARD</h3><div id="scorecardBox"><div class="small">CricLive scorecard load ho raha hai…</div></div></div>
- <div class="card"><h3>RECENT COMMENTARY</h3><div id="commentaryBox"><div class="small">Commentary load ho rahi hai…</div></div></div>
+ <div class="card"><div class="kv"><span>Series</span><b>${esc(m.series||"-")}</b></div><div class="kv"><span>Match</span><b>${esc(m.title||"-")}</b></div><div class="kv"><span>Status</span><b>${esc(m.status||"-")}</b></div><div class="kv"><span>Start</span><b>${esc(fmt(m.start))}</b></div><div class="kv"><span>Venue</span><b>${esc(m.venue||"-")}</b></div>${m.result||deriveResult(m)?`<div class="live-scoreline"><b>RESULT:</b> ${esc(m.result||deriveResult(m))}</div>`:''}</div>
+ <div class="card"><h3>MATCH TEAMS</h3>
+  <div class="team"><div>${logo(m.home.logo,m.home.name,m.home.raw)}</div><div class="team-info"><div class="team-name">${esc(m.home.name)}</div>${scoreText(m,'home')?`<div class="score">${esc(scoreText(m,'home'))}</div>`:''}</div></div>
+  <div class="team"><div>${logo(m.away.logo,m.away.name,m.away.raw)}</div><div class="team-info"><div class="team-name">${esc(m.away.name)}</div>${scoreText(m,'away')?`<div class="score">${esc(scoreText(m,'away'))}</div>`:''}</div></div>
+ </div>
+ <div class="card"><h3>${live(m)?"LIVE SCORECARD":"SCORECARD"}</h3><div id="scorecardBox"><div class="small">CricLive scorecard load ho raha hai…</div></div></div>
+ <div class="card"><h3>RECENT COMMENTARY</h3><div id="commentaryBox"><div class="small">Commentary abhi load nahi ki gayi — API hit bachane ke liye.</div></div><button class="secondary" id="loadCommentaryBtn" onclick="loadCommentaryFromDetails('${encodeURIComponent(String(m.id))}')">LOAD COMMENTARY • 1 API HIT</button></div>
  <div class="card"><h3>Virtual Game Value</h3><div class="kv"><span>Current index</span><b style="color:var(--gold);font-size:18px">${val(m)}</b></div><div class="notice">This is an in-game virtual index only. It has no cash value and no withdrawal function.</div></div>
  <div class="card"><h3>Entry</h3><div class="kv"><span>Joining fee</span><b>500 VC</b></div><div class="kv"><span>Your balance</span><b>${wallet.toLocaleString("en-IN")} VC</b></div><button class="primary" onclick="joinMatch('${encodeURIComponent(String(m.id))}')">JOIN FOR 500 VC</button></div>`;
  $("modal").classList.add("show");
- const d=await loadDetailsExtras(m);
- const sbx=$("scorecardBox"), cbx=$("commentaryBox");
+ // STRICT API RULE: opening Match Details spends at most ONE provider hit: scorecard only.
+ // Commentary is a separate explicit button and is never prefetched.
+ const d=await loadScorecardOnly(m);
+ const sbx=$("scorecardBox");
  if(sbx) sbx.innerHTML=renderScorecardData(d.scorecard,m)+(d.scorecardError?`<div class="small" style="margin-top:8px">${esc(d.scorecardError)}</div>`:'');
- if(cbx) cbx.innerHTML=renderCommentary(d.commentary)+(d.commentaryError?`<div class="small" style="margin-top:8px">${esc(d.commentaryError)}</div>`:'');
 }
+async function loadCommentaryFromDetails(enc){
+ const m=[...cache.LIVE,...cache.UPCOMING,...cache.COMPLETED].find(x=>String(x.id)===decodeURIComponent(enc));
+ if(!m) return;
+ const btn=$("loadCommentaryBtn"), box=$("commentaryBox");
+ if(btn) {btn.disabled=true;btn.textContent="LOADING COMMENTARY…";}
+ const d=await loadCommentaryOnly(m);
+ if(box) box.innerHTML=renderCommentary(d.commentary)+(d.commentaryError?`<div class="small" style="margin-top:8px">${esc(d.commentaryError)}</div>`:'');
+ if(btn) {btn.disabled=false;btn.textContent=d.commentary?"COMMENTARY LOADED":"LOAD COMMENTARY • 1 API HIT";}
+}
+
 async function joinMatch(enc){
  if(!session){openLogin();alert("Match join karne ke liye pehle KINGS11 login kijiye.");return;}
  const id=decodeURIComponent(enc);
- if(wallet<JOIN_FEE){alert(`Aapke paas ${JOIN_FEE} VC joining fee ke liye enough VC nahi hai.`);return}
+ const joining=Number(walletData.joining_vc||0), playing=Number(walletData.playing_vc||0);
+ if(joining<JOIN_FEE || playing<1000){
+   alert(`Match join karne ke liye 500 Joining VC + minimum 1,000 Playing VC chahiye. Abhi Joining VC: ${joining.toLocaleString("en-IN")} • Playing VC: ${playing.toLocaleString("en-IN")}`);
+   return;
+ }
  const m=[...cache.LIVE,...cache.UPCOMING,...cache.COMPLETED].find(x=>String(x.id)===id);
  if(!m)return;
- if(!confirm(`${m.home.name} vs ${m.away.name} me 500 VC entry use karna hai?`))return;
- const {data,error}=await sb.rpc("join_kings11_match",{p_match_id:id,p_joining_fee:JOIN_FEE});
+ if(!confirm(`${m.home.name} vs ${m.away.name} me 500 VC joining fee use karna hai?`))return;
+ const {error}=await sb.rpc("join_kings11_match",{p_match_id:id,p_joining_fee:JOIN_FEE});
  if(error){alert(error.message);return}
  await refreshWallet();
  closeModal();
- alert(`Match joined. 500 VC used. Remaining VC: ${wallet}`);
+ alert(`Match joined. 500 Joining VC used. Remaining total VC: ${wallet}`);
 }
 async function restoreSession(){
   // Match listing must work independently of Supabase authentication.
@@ -628,7 +1371,16 @@ async function restoreSession(){
  if(data?.session)await bootUser(data.session);
  sb.auth.onAuthStateChange(async (_e,s)=>{if(s&&!session)await bootUser(s)});
 }
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");currentTab=b.dataset.tab;render()}));
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",async()=>{
+ document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+ b.classList.add("active");
+ currentTab=b.dataset.tab;
+ if(currentTab==="LIVE"){
+   await loadLiveOnly();
+ }else{
+   await loadScheduleOnly();
+ }
+}));
 $("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
 restoreSession();
 </script>
