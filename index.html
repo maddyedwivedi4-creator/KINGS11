@@ -154,8 +154,6 @@ header{position:sticky;top:0;padding:18px 16px 16px;background:rgba(2,9,20,.97);
 */
 const SUPABASE_URL = "https://ecpumtuseevpavevzbux.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_gFzwKGnfDayK6Bp4PmOaSw_Xnd0eu-R";
-const KINGS11_TEST_PHONE = "918858759296";
-const KINGS11_TEST_OTP = "123456";
 const CRICKET_API = "https://kings11-criclive.maddye-dwivedi4.workers.dev";
 const JOIN_FEE = 500;
 
@@ -241,75 +239,56 @@ function setAuthMode(mode){
   $("adminAuth").classList.toggle("hidden",mode!=="admin");
 }
 function msg(t){$("authMsg").textContent=t||""}
+function normalizeIndianPhone(raw){
+  let p=String(raw||"").trim().replace(/[\s()-]/g,"");
+  if(/^0?\d{10}$/.test(p)) p=p.replace(/^0/,"");
+  if(/^\d{10}$/.test(p)) return "+91"+p;
+  if(/^91\d{10}$/.test(p)) return "+"+p;
+  if(/^\+91\d{10}$/.test(p)) return p;
+  return p;
+}
+const TEST_PHONE="+918858759296";
+const TEST_OTP="123456";
+function isTestPhone(phone){return normalizeIndianPhone(phone)===TEST_PHONE}
 function initSupabase(){
   if(!configured()){msg("KINGS11 Supabase URL + publishable key abhi index.html me set nahi hain.");return false}
-  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+  if(!sb) sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
   return true;
 }
-function normalizeK11Phone(v){
-  let x=String(v||"").replace(/\D/g,"");
-  if(x.startsWith("91") && x.length===12) x=x.slice(2);
-  return x;
-}
 async function sendOTP(){
-  const raw=$("phone").value.trim();
-  const normalized=normalizeK11Phone(raw);
-  if(!normalized)return msg("Mobile number dijiye.");
-  if(normalized.length!==10)return msg("Valid 10-digit Indian mobile number dijiye.");
-
-  // TEST MODE: only the configured test number uses fixed OTP 123456.
-  // This does not create a real Supabase auth session.
-  if(normalized===KINGS11_TEST_PHONE){
+  if(!initSupabase())return;
+  const phone=normalizeIndianPhone($("phone").value);
+  if(!/^\+91\d{10}$/.test(phone))return msg("Valid Indian mobile number dijiye.");
+  $("phone").value=phone;
+  $("otpBox").classList.add("hidden");
+  if(isTestPhone(phone)){
     $("otpBox").classList.remove("hidden");
-    $("otp").value="";
     msg("TEST MODE: OTP 123456 enter kijiye.");
     return;
   }
-
-  if(!initSupabase())return;
-  const phone=normalized.startsWith("91")?`+${normalized}`:`+91${normalized}`;
   msg("Account check karke OTP bheja ja raha hai…");
   try{
     const {error}=await sb.auth.signInWithOtp({phone,options:{shouldCreateUser:false}});
-    if(error)return msg(error.message||"OTP service available nahi hai.");
+    if(error){msg("OTP nahi bheja gaya: "+(error.message||"Supabase OTP error"));return}
     $("otpBox").classList.remove("hidden");
     msg("OTP bhej diya gaya. OTP enter kijiye.");
   }catch(e){
-    msg(e?.message||"OTP service available nahi hai.");
+    msg("OTP request failed: "+(e?.message||String(e)));
   }
 }
 async function verifyOTP(){
-  const raw=$("phone").value.trim(), token=$("otp").value.trim();
-  const normalized=normalizeK11Phone(raw);
-  if(!normalized||!token)return msg("Mobile aur OTP dono dijiye.");
-
-  // TEST MODE login is local/demo only and does not bypass Supabase for other users.
-  if(normalized===KINGS11_TEST_PHONE){
-    if(token!==KINGS11_TEST_OTP)return msg("TEST OTP galat hai. 123456 enter kijiye.");
-    const testId="80380510-c461-4cf3-8f74-efc8993d5ccf";
-    session={user:{id:testId,phone:"+91"+normalized}};
-    profile={id:testId,display_name:"Hemant Dwivedi",kings11_id:"K118E37BA24",phone:"+91"+normalized,role:"user"};
-    walletData={balance:1000,joining_vc:0,playing_vc:1000};
-    wallet=1000;
-    $("balance").textContent="1,000";
-    $("authScreen").classList.add("hidden");
-    $("loginTop").textContent=profile.kings11_id;
-    $("status").textContent=`Logged in • ${profile.display_name}`;
-    $("bottom").classList.remove("hidden");
-    msg("");
-    return;
-  }
-
   if(!initSupabase())return;
-  const phone=normalized.startsWith("91")?`+${normalized}`:`+91${normalized}`;
+  const phone=normalizeIndianPhone($("phone").value), token=$("otp").value.trim();
+  if(!/^\+91\d{10}$/.test(phone)||!token)return msg("Mobile aur OTP dono dijiye.");
+  if(isTestPhone(phone) && token!==TEST_OTP)return msg("TEST OTP galat hai. OTP 123456 hai.");
   msg("OTP verify ho raha hai…");
   try{
     const {data,error}=await sb.auth.verifyOtp({phone,token,type:"sms"});
-    if(error)return msg(error.message);
-    if(!data?.session)return msg("Login session nahi bana.");
+    if(error){msg("OTP verify nahi hua: "+(error.message||"Supabase verification error"));return}
+    if(!data?.session){msg("OTP verify hua, lekin Supabase session nahi mila. Supabase Auth Test Phone/OTP configuration check kijiye.");return}
     await bootUser(data.session);
   }catch(e){
-    msg(e?.message||"OTP verify nahi hua.");
+    msg("OTP verification failed: "+(e?.message||String(e)));
   }
 }
 async function adminLogin(){
@@ -335,13 +314,17 @@ async function bootUser(s){
 }
 let walletData={balance:0,joining_vc:0,playing_vc:0};
 async function refreshWallet(){
+  if(!sb||!session?.user?.id)return false;
   const {data,error}=await sb.from("wallets").select("*").eq("user_id",session.user.id).single();
-  if(!error&&data){
+  if(error){console.warn("KINGS11 wallet load failed:",error.message);return false}
+  if(data){
     walletData={...walletData,...data};
     const joining=Number(data.joining_vc||0), playing=Number(data.playing_vc||0);
     wallet=joining+playing;
     $("balance").textContent=wallet.toLocaleString("en-IN");
+    return true;
   }
+  return false;
 }
 async function logout(){
   try{
