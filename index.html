@@ -152,8 +152,8 @@ header{position:sticky;top:0;padding:18px 16px 16px;background:rgba(2,9,20,.97);
    Put ONLY the KINGS11 Supabase project URL + publishable key here.
    Never put a service_role key or CricLive API key in this file.
 */
-const SUPABASE_URL = "https://ecpumtuseevpavevzbux.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_gFzwKGnfDayK6Bp4PmOaSw_Xnd0eu-R";
+const SUPABASE_URL = "PASTE_KINGS11_SUPABASE_URL_HERE";
+const SUPABASE_PUBLISHABLE_KEY = "PASTE_KINGS11_SUPABASE_PUBLISHABLE_KEY_HERE";
 const CRICKET_API = "https://kings11-criclive.maddye-dwivedi4.workers.dev";
 const JOIN_FEE = 500;
 
@@ -244,59 +244,23 @@ function initSupabase(){
   sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
   return true;
 }
-function normalizeIndianPhone(value){
-  let p=String(value||"").trim().replace(/[\s()-]/g,"");
-  if(/^\d{10}$/.test(p)) p="+91"+p;
-  else if(/^91\d{10}$/.test(p)) p="+"+p;
-  return p;
-}
-function withTimeout(promise,ms){
-  return Promise.race([
-    promise,
-    new Promise((_,reject)=>setTimeout(()=>reject(new Error("OTP request timed out. Supabase SMS/Auth service ne response nahi diya. 15 seconds baad dobara try kijiye.")),ms))
-  ]);
-}
 async function sendOTP(){
   if(!initSupabase())return;
-  const phone=normalizeIndianPhone($("phone").value);
-  if(!/^\+91\d{10}$/.test(phone))return msg("Valid Indian mobile number dijiye, jaise +918858759296.");
-  $("phone").value=phone;
+  const phone=$("phone").value.trim();
+  if(!phone)return msg("Mobile number dijiye.");
   msg("Account check karke OTP bheja ja raha hai…");
-  try{
-    // Admin-created accounts only: an unknown phone cannot self-register.
-    const result=await withTimeout(
-      sb.auth.signInWithOtp({phone,options:{shouldCreateUser:false}}),
-      15000
-    );
-    if(result?.error){
-      msg("OTP nahi bheja gaya: "+(result.error.message||"Supabase Auth error"));
-      return;
-    }
-    $("otpBox").classList.remove("hidden");
-    msg("OTP bhej diya gaya. OTP enter kijiye.");
-  }catch(e){
-    msg(e?.message||"OTP request failed.");
-  }
+  // Admin-created accounts only: an unknown phone cannot self-register.
+  const {error}=await sb.auth.signInWithOtp({phone,options:{shouldCreateUser:false}});
+  if(error)return msg("Is mobile number ka KINGS11 account admin ne create nahi kiya hai, ya OTP service available nahi hai.");
+  $("otpBox").classList.remove("hidden");msg("OTP bhej diya gaya. OTP enter kijiye.");
 }
 async function verifyOTP(){
-  if(!initSupabase())return;
-  const phone=normalizeIndianPhone($("phone").value), token=$("otp").value.trim();
-  if(!/^\+91\d{10}$/.test(phone))return msg("Valid Indian mobile number dijiye.");
-  if(!/^\d{6}$/.test(token))return msg("6-digit OTP dijiye.");
-  $("phone").value=phone;
+  const phone=$("phone").value.trim(), token=$("otp").value.trim();
+  if(!phone||!token)return msg("Mobile aur OTP dono dijiye.");
   msg("OTP verify ho raha hai…");
-  try{
-    const result=await withTimeout(
-      sb.auth.verifyOtp({phone,token,type:"sms"}),
-      15000
-    );
-    const {data,error}=result||{};
-    if(error){msg("OTP verify nahi hua: "+(error.message||"Invalid OTP"));return}
-    if(!data?.session){msg("OTP verify hua, lekin login session nahi mila. Dobara try kijiye.");return}
-    await bootUser(data.session);
-  }catch(e){
-    msg(e?.message||"OTP verification failed.");
-  }
+  const {data,error}=await sb.auth.verifyOtp({phone,token,type:"sms"});
+  if(error)return msg(error.message);
+  await bootUser(data.session);
 }
 async function adminLogin(){
   if(!initSupabase())return;
